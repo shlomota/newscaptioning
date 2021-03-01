@@ -11,6 +11,7 @@ dataset_reader:
       padding_on_right: true
       padding_value: 1
       max_len: 512
+  mongo_host: "nova"
   image_dir: data/nytimes/images_processed
   lazy: true
   use_caption_names: false
