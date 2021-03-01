@@ -3,16 +3,23 @@ from PIL import Image
 from pymongo import MongoClient
 from rank_bm25 import BM25Okapi
 import pandas as pd
+import random
+
+def get_random_doc(collection):
+    count = collection.count()
+    return collection.find()[random.randrange(count)]
 
 # Assume that you've already restored the database and the mongo server is running
 # client = MongoClient(host='localhost', port=27017)
-client = MongoClient(host='132.67.248.168', port=27017)
+# client = MongoClient(host='c-007.cs.tau.ac.il', port=27017)
+client = MongoClient(host='nova.cs.tau.ac.il', port=27017)
 
 # All of our NYTimes800k articles sit in the database `nytimes`
 db = client.nytimes
-
 # Here we select a random article in the training set.
-article = db.articles.find_one({'split': 'train'})
+# article = db.articles.find_one({'split': 'train'})
+article = get_random_doc(db.articles)
+
 
 # You can visit the original web page where this article came from
 url = article['web_url']
@@ -45,9 +52,12 @@ image = Image.open(image_path)
 # obj = db.objects.find_one({'_id': sections[pos]['hash']})
 # object_embeds = obj['object_features']
 
+#TODO: use better tokenization
 tokenized_corpus = [doc.split(" ") for doc in paragraphs]
 bm25 = BM25Okapi(tokenized_corpus)
 query = caption
+
+#TODO: use better tokenization
 tokenized_query = query.split(" ")
 doc_scores = bm25.get_scores(tokenized_query)
 print(doc_scores)
@@ -56,4 +66,5 @@ df = pd.DataFrame(columns=["text", "score"])
 df.text = paragraphs
 df.score = doc_scores
 df.to_csv("result.csv")
-a = 5
+
+print(caption)

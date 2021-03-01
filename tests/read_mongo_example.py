@@ -4,7 +4,7 @@ from pymongo import MongoClient
 
 # Assume that you've already restored the database and the mongo server is running
 # client = MongoClient(host='localhost', port=27017)
-client = MongoClient(host='132.67.248.168', port=27017)
+client = MongoClient(host='c-007.cs.tau.ac.il', port=27017)
 
 # All of our NYTimes800k articles sit in the database `nytimes`
 db = client.nytimes
