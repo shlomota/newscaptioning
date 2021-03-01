@@ -212,7 +212,7 @@ class NewReader2(DatasetReader):
                 for p in df["paragraph"].values.tolist():
                     text = p["text"]
                     n_words += len(self.to_token_ids(text))
-                    sorted_paragraphs.append(p)
+                    sorted_paragraphs.append(text)
                     named_entities |= self._get_named_entities(p)
                     if n_words >= 510:
                         break
