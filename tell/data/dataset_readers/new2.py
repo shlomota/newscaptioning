@@ -126,6 +126,7 @@ class NewReader2(DatasetReader):
 
 
                 # if False: #old way - 1st + around image
+                paragraphs = []
                 before = []
                 after = []
                 i = pos - 1
