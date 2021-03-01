@@ -139,6 +139,7 @@ class NewReader2(DatasetReader):
                         named_entities |= self._get_named_entities(section)
                         break
 
+                n_words = 0
                 while True:
                     if i > k and sections[i]['type'] == 'paragraph':
                         text = sections[i]['text']
