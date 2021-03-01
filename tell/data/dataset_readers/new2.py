@@ -127,6 +127,8 @@ class NewReader2(DatasetReader):
 
                 # if False: #old way - 1st + around image
                 paragraphs = []
+                named_entities = {}
+
                 before = []
                 after = []
                 i = pos - 1
@@ -193,7 +195,7 @@ class NewReader2(DatasetReader):
                 paragraphs = [p for p in sections if p['type'] == 'paragraph']
 
                 paragraphs_texts = [p["text"] for p in paragraphs]
-                tokenized_corpus = [doc.split(" ") for doc in paragraphs]
+                tokenized_corpus = [doc.split(" ") for doc in paragraphs_texts]
                 bm25 = BM25Okapi(tokenized_corpus)
                 query = caption
                 tokenized_query = query.split(" ")
