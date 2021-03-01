@@ -127,7 +127,7 @@ class NewReader2(DatasetReader):
 
                 # if False: #old way - 1st + around image
                 paragraphs = []
-                named_entities = {}
+                named_entities = set()
 
                 before = []
                 after = []
@@ -206,7 +206,7 @@ class NewReader2(DatasetReader):
                 df = df.sort_values("score", ascending=False)
                 #sort df
                 n_words = 0
-                named_entities = {}
+                named_entities = set()
                 sorted_paragraphs = []
                 for p in df["paragraph"].values.tolist():
                     text = p["text"]
