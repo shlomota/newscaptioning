@@ -8,3 +8,4 @@ from .nytimes_faces_ner_matched import NYTimesFacesNERMatchedReader
 from .nytimes_glove import NYTimesGloveReader
 from .nytimes_position import NYTimesPositionReader
 from .new import NewReader
+from .new2 import NewReader2

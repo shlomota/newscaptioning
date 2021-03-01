@@ -1,11 +1,11 @@
 #! /bin/sh
-#SBATCH --job-name=awesome
-#SBATCH --output=awesome.out
-#SBATCH --error=awesome.err
+#SBATCH --job-name=poc
+#SBATCH --output=poc.out
+#SBATCH --error=poc.err
 #SBATCH --partition=studentbatch
-#SBATCH --job-name hello-world
-#SBATCH --time=1
+#SBATCH --job-name newscaptioning1
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
 #SBATCH --gpus=1
-echo hi > /home/joberant/nlp_fall_2021/shlomotannor/transform-and-tell/abc
+/specific/netapp5/joberant/nlp_fall_2021/shlomotannor/anaconda3/envs/tell/bin/python poc_script2.py
+
