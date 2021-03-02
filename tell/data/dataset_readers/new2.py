@@ -102,7 +102,7 @@ class NewReader2(DatasetReader):
                       'image_positions', 'headline',
                       'web_url', 'n_images_with_faces']
 
-        for article_id in ids[:10]:
+        for article_id in ids[:1000]:
             print("article_id", article_id)
             article = self.db.articles.find_one(
                 {'_id': {'$eq': article_id}}, projection=projection)
