@@ -154,6 +154,8 @@ def evaluate(model: Model,
             description = ', '.join(["%s: %.2f" % (name, value) for name, value
                                      in metrics.items() if not name.startswith("_")]) + " ||"
             generator_tqdm.set_description(description, refresh=False)
+            #TODO: remove
+            print(description)
 
         final_metrics = model.get_metrics(reset=True)
         if loss_count > 0:
