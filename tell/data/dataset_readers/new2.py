@@ -102,16 +102,27 @@ class NewReader2(DatasetReader):
                       'image_positions', 'headline',
                       'web_url', 'n_images_with_faces']
 
-        for article_id in ids[:1]:
+        for article_id in ids[:10]:
             print("article_id", article_id)
             article = self.db.articles.find_one(
                 {'_id': {'$eq': article_id}}, projection=projection)
             sections = article['parsed_section']
             image_positions = article['image_positions']
             for pos in image_positions:
+                paragraphs = []
+                named_entities = set()
+                n_words = 0
                 title = ''
                 if 'main' in article['headline']:
                     title = article['headline']['main'].strip()
+
+
+                if title:
+                    paragraphs.append(title)
+                    named_entities.union(
+                        self._get_named_entities(article['headline']))
+                    n_words += len(self.to_token_ids(title))
+
 
                 caption = sections[pos]['text'].strip()
                 if not caption:
@@ -126,9 +137,6 @@ class NewReader2(DatasetReader):
 
 
                 # if False: #old way - 1st + around image
-                paragraphs = []
-                named_entities = set()
-
                 before = []
                 after = []
                 i = pos - 1
@@ -139,7 +147,7 @@ class NewReader2(DatasetReader):
                         named_entities |= self._get_named_entities(section)
                         break
 
-                n_words = 0
+
                 while True:
                     if i > k and sections[i]['type'] == 'paragraph':
                         text = sections[i]['text']
@@ -209,6 +217,13 @@ class NewReader2(DatasetReader):
                 n_words = 0
                 named_entities = set()
                 sorted_paragraphs = []
+
+                if title:
+                    sorted_paragraphs.append(title)
+                    named_entities.union(
+                        self._get_named_entities(article['headline']))
+                    n_words += len(self.to_token_ids(title))
+
                 for p in df["paragraph"].values.tolist():
                     text = p["text"]
                     n_words += len(self.to_token_ids(text))
