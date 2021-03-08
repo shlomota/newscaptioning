@@ -1,7 +1,7 @@
 import os
 from tell.commands.evaluate import evaluate_from_file as eff
 
-TAT_FOLDER = "/specific/netapp5/joberant/nlp_fall_2021/shlomotannor/transform-and-tell/"
+TAT_FOLDER = "/specific/netapp5/joberant/nlp_fall_2021/shlomotannor/newscaptioning/"
 model = "10_new"
 
 YAML = "expt/nytimes/{}/config.yaml".format(model)

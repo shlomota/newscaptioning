@@ -61,7 +61,6 @@ class NewReader(DatasetReader):
                  n_faces: int = None,
                  lazy: bool = True) -> None:
         super().__init__(lazy)
-        print(mongo_host)
         self._tokenizer = tokenizer
         self._token_indexers = token_indexers
         self.client = MongoClient(host=mongo_host, port=mongo_port)
@@ -102,16 +101,17 @@ class NewReader(DatasetReader):
                       'web_url', 'n_images_with_faces']
 
         for article_id in ids[:1]:
-            print("article_id", article_id)
             article = self.db.articles.find_one(
                 {'_id': {'$eq': article_id}}, projection=projection)
             sections = article['parsed_section']
             image_positions = article['image_positions']
-            for pos in image_positions:
-                title = ''
-                if 'main' in article['headline']:
-                    title = article['headline']['main'].strip()
+            paragraphs = [p for p in sections if p['type'] == 'paragraph']
+            print("article_id", article_id, len(image_positions))
+            title = ''
+            if 'main' in article['headline']:
+                title = article['headline']['main'].strip()
 
+            for pos in image_positions[:1]:
                 caption = sections[pos]['text'].strip()
                 if not caption:
                     continue
@@ -122,39 +122,6 @@ class NewReader(DatasetReader):
                     n_persons = len(self._get_person_names(sections[pos]))
                 else:
                     n_persons = 4
-
-
-                if False: #old way - 1st + around image
-                    before = []
-                    after = []
-                    i = pos - 1
-                    j = pos + 1
-                    for k, section in enumerate(sections):
-                        if section['type'] == 'paragraph':
-                            paragraphs.append(section['text'])
-                            named_entities |= self._get_named_entities(section)
-                            break
-
-                    while True:
-                        if i > k and sections[i]['type'] == 'paragraph':
-                            text = sections[i]['text']
-                            before.insert(0, text)
-                            named_entities |= self._get_named_entities(sections[i])
-                            n_words += len(self.to_token_ids(text))
-                        i -= 1
-
-                        if k < j < len(sections) and sections[j]['type'] == 'paragraph':
-                            text = sections[j]['text']
-                            after.append(text)
-                            named_entities |= self._get_named_entities(sections[j])
-                            n_words += len(self.to_token_ids(text))
-                        j += 1
-
-                        if n_words >= 510 or (i <= k and j >= len(sections)):
-                            break
-
-                    paragraphs = paragraphs + before + after
-                    named_entities = sorted(named_entities)
 
                 image_path = os.path.join(
                     self.image_dir, f"{sections[pos]['hash']}.jpg")
@@ -184,9 +151,7 @@ class NewReader(DatasetReader):
                         obj_feats = np.array([[]])
 
                 # 'new' way of sending every paragraph
-                paragraphs = [p for p in sections if p['type'] == 'paragraph']
-
-                for i, p in enumerate(paragraphs): #eval for every paragraph
+                for i, p in enumerate(paragraphs[:1]): #eval for every paragraph
                     paragraphs_for_eval = []
                     named_entities = set()
                     n_words = 0
@@ -201,6 +166,8 @@ class NewReader(DatasetReader):
                         paragraphs_for_eval.append(text)
                         n_words += len(self.to_token_ids(text))
                         named_entities |= self._get_named_entities(p)
+
+                    print(i, len(paragraphs_for_eval))
 
                     yield self.article_to_instance(
                         paragraphs_for_eval, named_entities, image, caption, image_path,

@@ -60,7 +60,7 @@ class TransformerFacesObjectModel(Model):
 
         self.n_batches = 0
         self.n_samples = 0
-        self.sample_history: Dict[str, float] = defaultdict(float)
+        self.sample_history = {}
 
         initializer(self)
 
@@ -95,32 +95,51 @@ class TransformerFacesObjectModel(Model):
             # We ignore <s> and <pad>
             gen_texts = [self.roberta.decode(x[x > 1]) for x in gen_ids.cpu()]
             captions = [m['caption'] for m in metadata]
+            pi_chosen = [m['pi_chosen'] for m in metadata]
+            gen_types = [m['gen_type'] for m in metadata]
+            image_ids = [m['image_id'] for m in metadata]
 
             output_dict['captions'] = captions
             output_dict['generations'] = gen_texts
             output_dict['metadata'] = metadata
             output_dict['attns'] = attns
             output_dict['gen_ids'] = gen_ids.cpu().detach().numpy()
+            #output_dict['gen_types'] = gen_types
+            #output_dict['pi_chosen'] = pi_chosen
 
             # Remove punctuation
             gen_texts = [re.sub(r'[^\w\s]', '', t) for t in gen_texts]
             captions = [re.sub(r'[^\w\s]', '', t) for t in captions]
 
-            for gen, ref in zip(gen_texts, captions):
+            for i, (image_id, gen, ref, pi, gen_type) in enumerate(zip(image_ids, gen_texts, captions, pi_chosen, gen_types)):
+                if not gen in self.sample_history:
+                    self.sample_history[i] = {}
                 bleu_scorer = BleuScorer(n=4)
                 bleu_scorer += (gen, [ref])
                 score, _ = bleu_scorer.compute_score(option='closest')
-                self.sample_history['bleu-1'] += score[0] * 100
-                self.sample_history['bleu-2'] += score[1] * 100
-                self.sample_history['bleu-3'] += score[2] * 100
-                self.sample_history['bleu-4'] += score[3] * 100
+                print(i)
+                print(f"image_id: {image_id}")
+                print(f"gentype: {gen_type}")
+                print(f"pi: {pi}")
+                print(f"gen: {gen}")
+                print(f"ref: {ref}")
+                print(f"bleu-1: {score[0]}")
+                print(f"bleu-2: {score[1]}")
+                print(f"bleu-3: {score[2]}")
+                print(f"bleu-4: {score[3]}")
+                print("<N>")
+                print()
+                self.sample_history[i]['bleu-1'] = score[0] * 100
+                self.sample_history[i]['bleu-2'] = score[1] * 100
+                self.sample_history[i]['bleu-3'] = score[2] * 100
+                self.sample_history[i]['bleu-4'] = score[3] * 100
 
                 # rogue_scorer = Rouge()
                 # score = rogue_scorer.calc_score([gen], [ref])
                 # self.sample_history['rogue'] += score * 100
 
             if 'rare_tokens' in caption:
-                for gen, ref, rare_list in zip(gen_texts, captions, caption['rare_tokens']):
+                for i, (gen, ref, rare_list) in enumerate(zip(gen_texts, captions, caption['rare_tokens'])):
                     bleu_scorer = BleuScorer(n=4)
                     rare_words = ' '.join(rare_list)
                     gen = gen + ' ' + rare_words
@@ -130,9 +149,12 @@ class TransformerFacesObjectModel(Model):
                         print(gen)
                         print()
 
+
                     bleu_scorer += (gen, [ref])
                     score, _ = bleu_scorer.compute_score(option='closest')
-                    self.sample_history['bleu-1r'] += score[0] * 100
+                    if not gen in self.sample_history:
+                        self.sample_history[i] = {}
+                    self.sample_history[i]['bleu-1r'] = score[0] * 100
 
         self.n_samples += caption_ids.shape[0]
         self.n_batches += 1
@@ -502,6 +524,7 @@ class TransformerFacesObjectModel(Model):
         return output_dict
 
     def get_metrics(self, reset: bool = False) -> Dict[str, float]:
+        return self.sample_history
         metrics: Dict[str, float] = {}
         metrics['_n_batches'] = self.n_batches
         metrics['_n_samples'] = self.n_samples

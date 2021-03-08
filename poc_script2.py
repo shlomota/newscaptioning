@@ -1,7 +1,9 @@
 import os
+import time
 from tell.commands.evaluate import evaluate_from_file as eff
 
 TAT_FOLDER = "/specific/netapp5/joberant/nlp_fall_2021/shlomotannor/newscaptioning/"
+OUTS_FOLDER = "outs"
 model = "11_new2"
 
 YAML = "expt/nytimes/{}/config.yaml".format(model)
@@ -17,3 +19,5 @@ if os.path.exists(G_JSONL):
     os.remove(G_JSONL)
 
 eff(YAML, SER, device=0)
+
+os.rename(G_JSONL, os.path.join(TAT_FOLDER, OUTS_FOLDER, f"generations_{round(time.time())}.jsonl"))

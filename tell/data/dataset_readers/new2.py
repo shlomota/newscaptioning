@@ -60,7 +60,10 @@ class NewReader2(DatasetReader):
                  use_caption_names: bool = True,
                  use_objects: bool = False,
                  n_faces: int = None,
-                 lazy: bool = True) -> None:
+                 lazy: bool = True,
+                 articles_num: int = -1,
+                 use_first: bool = True,
+                 sort_BM: bool = False) -> None:
         super().__init__(lazy)
         print(mongo_host)
         self._tokenizer = tokenizer
@@ -80,6 +83,9 @@ class NewReader2(DatasetReader):
         roberta = torch.hub.load('pytorch/fairseq:2f7e3f3323', 'roberta.base')
         self.bpe = roberta.bpe
         self.indices = roberta.task.source_dictionary.indices
+        self.articles_num = articles_num
+        self.use_first = use_first
+        self.sort_BM = sort_BM
 
     @overrides
     def _read(self, split: str):
@@ -101,14 +107,18 @@ class NewReader2(DatasetReader):
                       'parsed_section.facenet_details', 'parsed_section.named_entities',
                       'image_positions', 'headline',
                       'web_url', 'n_images_with_faces']
+        if self.articles_num == -1:
+            self.articles_num = len(ids)
 
-        for article_id in ids[:1000]:
-            print("article_id", article_id)
+        print(f'articles num: {self.articles_num}')
+
+        for article_id in ids[:self.articles_num]:
             article = self.db.articles.find_one(
                 {'_id': {'$eq': article_id}}, projection=projection)
             sections = article['parsed_section']
             image_positions = article['image_positions']
             for pos in image_positions:
+                image_id = f'{article_id}_{pos}'
                 paragraphs = []
                 named_entities = set()
                 n_words = 0
@@ -136,7 +146,8 @@ class NewReader2(DatasetReader):
                     n_persons = 4
 
 
-                # if False: #old way - 1st + around image
+                #old way - 1st + around image
+                pi_chosen = []
                 before = []
                 after = []
                 i = pos - 1
@@ -145,6 +156,7 @@ class NewReader2(DatasetReader):
                     if section['type'] == 'paragraph':
                         paragraphs.append(section['text'])
                         named_entities |= self._get_named_entities(section)
+                        pi_chosen.append(k)
                         break
 
 
@@ -154,6 +166,7 @@ class NewReader2(DatasetReader):
                         before.insert(0, text)
                         named_entities |= self._get_named_entities(sections[i])
                         n_words += len(self.to_token_ids(text))
+                        pi_chosen.append(i)
                     i -= 1
 
                     if k < j < len(sections) and sections[j]['type'] == 'paragraph':
@@ -161,6 +174,7 @@ class NewReader2(DatasetReader):
                         after.append(text)
                         named_entities |= self._get_named_entities(sections[j])
                         n_words += len(self.to_token_ids(text))
+                        pi_chosen.append(j)
                     j += 1
 
                     if n_words >= 510 or (i <= k and j >= len(sections)):
@@ -168,6 +182,7 @@ class NewReader2(DatasetReader):
 
                 paragraphs = paragraphs + before + after
                 named_entities = sorted(named_entities)
+                pi_chosen.sort()
 
                 image_path = os.path.join(
                     self.image_dir, f"{sections[pos]['hash']}.jpg")
@@ -198,7 +213,7 @@ class NewReader2(DatasetReader):
 
                 yield self.article_to_instance(
                     paragraphs, named_entities, image, caption, image_path,
-                    article['web_url'], pos, face_embeds, obj_feats)
+                    article['web_url'], pos, face_embeds, obj_feats, image_id, pi_chosen, gen_type=1)
 
                 # 'new' way of sending every paragraph
                 paragraphs = [p for p in sections if p['type'] == 'paragraph']
@@ -209,14 +224,34 @@ class NewReader2(DatasetReader):
                 query = caption
                 tokenized_query = query.split(" ")
                 paragraphs_scores = bm25.get_scores(tokenized_query)
-                df = pd.DataFrame(columns=["paragraph", "score"])
+                df = pd.DataFrame(columns=["paragraph", "score", "i"])
                 df.paragraph = paragraphs
                 df.score = paragraphs_scores
-                df = df.sort_values("score", ascending=False)
+                df.i = list(range(len(paragraphs)))
+                #df = df.sort_index(ascending=False)
+
+
+                if self.sort_BM:
+                    sorted_df = df.sort_values("score", ascending=False)
+                    thresh = 0
+                    text_count = 0
+                    if title:
+                        text_count = len(title)
+
+                    for index, row in (sorted_df.iterrows()):
+                        text_count += len(row.paragraph["text"])
+                        if text_count > 512:
+                            thresh = row.score
+                            break
+                    df = df[df.score >= thresh]
+                else:
+                    df = df.sort_values("score", ascending=False)
+
                 #sort df
                 n_words = 0
                 named_entities = set()
                 sorted_paragraphs = []
+                pi_chosen = []
 
                 if title:
                     sorted_paragraphs.append(title)
@@ -224,22 +259,39 @@ class NewReader2(DatasetReader):
                         self._get_named_entities(article['headline']))
                     n_words += len(self.to_token_ids(title))
 
-                for p in df["paragraph"].values.tolist():
-                    text = p["text"]
-                    n_words += len(self.to_token_ids(text))
-                    sorted_paragraphs.append(text)
-                    named_entities |= self._get_named_entities(p)
-                    if n_words >= 510:
-                        break
+                if self.use_first:
+                    fp = df[df['i'] == 0]
+                    fp = fp["paragraph"].values.tolist()
+                    if fp:
+                        fp = fp[0]
+                        text = fp["text"]
+                        n_words += len(self.to_token_ids(text))
+                        sorted_paragraphs.append(text)
+                        named_entities |= self._get_named_entities(fp)
+                    else:
+                        print(f"?!{len(paragraphs)}")
+
+                if n_words < 510:
+                    if self.use_first: #if used 1st paragraph, don't reuse
+                        df = df[df['i'] != 0]
+
+                    for p, i in zip(df["paragraph"].values.tolist(), df["i"].values.tolist()):
+                        text = p["text"]
+                        n_words += len(self.to_token_ids(text))
+                        sorted_paragraphs.append(text)
+                        named_entities |= self._get_named_entities(p)
+                        pi_chosen.append(i)
+                        if n_words >= 510:
+                            break
 
                 named_entities = sorted(named_entities)
                 yield self.article_to_instance(
                         sorted_paragraphs, named_entities, image, caption, image_path,
-                        article['web_url'], pos, face_embeds, obj_feats)
+                        article['web_url'], pos, face_embeds, obj_feats, image_id, pi_chosen, gen_type=2)
 
 
     def article_to_instance(self, paragraphs, named_entities, image, caption,
-                            image_path, web_url, pos, face_embeds, obj_feats) -> Instance:
+                            image_path, web_url, pos, face_embeds, obj_feats, image_id, pi_chosen, gen_type) -> Instance:
         context = '\n'.join(paragraphs).strip()
 
         context_tokens = self._tokenizer.tokenize(context)
@@ -270,7 +322,10 @@ class NewReader2(DatasetReader):
                     'names': named_entities,
                     'web_url': web_url,
                     'image_path': image_path,
-                    'image_pos': pos}
+                    'image_pos': pos,
+                    'pi_chosen': pi_chosen,
+                    'gen_type': gen_type,
+                    'image_id': image_id}
         fields['metadata'] = MetadataField(metadata)
 
         return Instance(fields)

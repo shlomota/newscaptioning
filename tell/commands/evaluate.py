@@ -88,6 +88,7 @@ def evaluate(model: Model,
              serialization_dir: str,
              eval_suffix: str,
              batch_weight_key: str) -> Dict[str, Any]:
+    print("inst", type(instances), dir(instances), instances)
     check_for_gpu(cuda_device)
     nlp = spacy.load("en_core_web_lg")
     assert not os.path.exists(os.path.join(
@@ -146,16 +147,19 @@ def evaluate(model: Model,
                 # Report the average loss so far.
                 metrics["loss"] = total_loss / total_weight
 
-            if (not HasBeenWarned.tqdm_ignores_underscores and
-                    any(metric_name.startswith("_") for metric_name in metrics)):
-                logger.warning("Metrics with names beginning with \"_\" will "
-                               "not be logged to the tqdm progress bar.")
-                HasBeenWarned.tqdm_ignores_underscores = True
-            description = ', '.join(["%s: %.2f" % (name, value) for name, value
-                                     in metrics.items() if not name.startswith("_")]) + " ||"
-            generator_tqdm.set_description(description, refresh=False)
-            #TODO: remove
-            print(description)
+            #if (not HasBeenWarned.tqdm_ignores_underscores and
+            #        any(metric_name.startswith("_") for metric_name in metrics)):
+            #    logger.warning("Metrics with names beginning with \"_\" will "
+            #                   "not be logged to the tqdm progress bar.")
+            #    HasBeenWarned.tqdm_ignores_underscores = True
+            # description = ""
+            # description = ""
+            # for i in metrics:
+            #     description += ', '.join(["%s: %.2f" % (name, value) for name, value
+            #                              in metrics[i].items() if not name.startswith("_")]) + " ||\n"
+            # generator_tqdm.set_description(description, refresh=False)
+            # #TODO: remove
+            # print(description)
 
         final_metrics = model.get_metrics(reset=True)
         if loss_count > 0:
