@@ -1,0 +1,65 @@
+Using cache found in /a/home/cc/students/cs/shlomotannor/.cache/torch/hub/pytorch_fairseq_2f7e3f3323
+Using cache found in /a/home/cc/students/cs/shlomotannor/.cache/torch/hub/pytorch_fairseq_2f7e3f3323
+0it [00:00, ?it/s]
+
+0it [00:00, ?it/s]
+[A
+102it [00:01, 74.51it/s]
+[A
+81744it [00:01, 106.44it/s]
+[A
+165307it [00:01, 152.05it/s]
+[A
+249873it [00:01, 217.19it/s]
+[A
+335839it [00:01, 310.24it/s]
+[A
+400073it [00:02, 442.81it/s]
+[A434314it [00:02, 194023.32it/s]
+
+1it [00:02,  2.37s/it]
+
+0it [00:00, ?it/s]
+[A3052it [00:00, 229273.29it/s]
+
+12it [00:02,  1.66s/it]
+27it [00:02,  1.17s/it]
+
+0it [00:00, ?it/s]
+[A8495it [00:00, 227166.51it/s]
+
+35it [00:02,  1.22it/s]
+39it [00:02, 14.34it/s]
+
+Using cache found in /a/home/cc/students/cs/shlomotannor/.cache/torch/hub/pytorch_fairseq_2f7e3f3323
+  0%|          | 0/1 [00:00<?, ?it/s]
+
+0it [00:00, ?it/s]
+[A
+102it [00:01, 75.23it/s]
+[A
+81556it [00:01, 107.47it/s]
+[A
+165521it [00:01, 153.52it/s]
+[A
+250893it [00:01, 219.30it/s]
+[A
+336719it [00:01, 313.25it/s]
+[A
+401120it [00:02, 447.09it/s]
+[A434314it [00:02, 194546.73it/s]
+
+Traceback (most recent call last):
+  File "trainBM.py", line 8, in <module>
+    train_model_from_file(parameter_filename, serialization_dir)
+  File "/specific/netapp5/joberant/nlp_fall_2021/shlomotannor/newscaptioning/tell/commands/train.py", line 64, in train_model_from_file
+    cache_directory, cache_prefix)
+  File "/specific/netapp5/joberant/nlp_fall_2021/shlomotannor/anaconda3/envs/tell/lib/python3.7/site-packages/allennlp/commands/train.py", line 252, in train_model
+    metrics = trainer.train()
+  File "/specific/netapp5/joberant/nlp_fall_2021/shlomotannor/anaconda3/envs/tell/lib/python3.7/site-packages/allennlp/training/trainer.py", line 478, in train
+    train_metrics = self._train_epoch(epoch)
+  File "/specific/netapp5/joberant/nlp_fall_2021/shlomotannor/anaconda3/envs/tell/lib/python3.7/site-packages/allennlp/training/trainer.py", line 322, in _train_epoch
+    if torch.isnan(loss):
+TypeError: isnan(): argument 'input' (position 1) must be Tensor, not float
+  0%|          | 0/1 [00:02<?, ?it/s]
+
