@@ -1,0 +1,14 @@
+2021-03-15 18:29:29,591 - INFO - allennlp.common.params - random_seed = 13370
+2021-03-15 18:29:29,591 - INFO - allennlp.common.params - numpy_seed = 1337
+2021-03-15 18:29:29,591 - INFO - allennlp.common.params - pytorch_seed = 133
+2021-03-15 18:29:29,631 - INFO - allennlp.common.checks - Pytorch version: 1.5.1
+2021-03-15 18:29:29,634 - INFO - allennlp.common.params - evaluate_on_test = False
+2021-03-15 18:29:29,634 - INFO - allennlp.common.params - validation_dataset_reader = None
+2021-03-15 18:29:29,634 - INFO - allennlp.common.from_params - instantiating class <class 'allennlp.data.dataset_readers.dataset_reader.DatasetReader'> from params {'articles_num': 5, 'image_dir': 'data/nytimes/images_processed', 'lazy': True, 'mongo_host': 'nova', 'token_indexers': {'roberta': {'max_len': 512, 'model_name': 'roberta-base', 'namespace': 'bpe', 'padding_on_right': 'true', 'padding_value': 1, 'type': 'roberta'}}, 'tokenizer': {'type': 'word', 'word_splitter': 'just_spaces_keep_newlines'}, 'type': 'BMReader', 'use_caption_names': False, 'use_objects': True} and extras set()
+2021-03-15 18:29:29,634 - INFO - allennlp.common.params - dataset_reader.type = BMReader
+2021-03-15 18:29:29,634 - INFO - allennlp.common.from_params - instantiating class <class 'BM.data.dataset_readers.reader.BMReader'> from params {'articles_num': 5, 'image_dir': 'data/nytimes/images_processed', 'lazy': True, 'mongo_host': 'nova', 'token_indexers': {'roberta': {'max_len': 512, 'model_name': 'roberta-base', 'namespace': 'bpe', 'padding_on_right': 'true', 'padding_value': 1, 'type': 'roberta'}}, 'tokenizer': {'type': 'word', 'word_splitter': 'just_spaces_keep_newlines'}, 'use_caption_names': False, 'use_objects': True} and extras set()
+2021-03-15 18:29:29,634 - INFO - allennlp.common.from_params - instantiating class <class 'allennlp.data.tokenizers.tokenizer.Tokenizer'> from params {'type': 'word', 'word_splitter': 'just_spaces_keep_newlines'} and extras set()
+2021-03-15 18:29:29,634 - INFO - allennlp.common.params - dataset_reader.tokenizer.type = word
+2021-03-15 18:29:29,634 - INFO - allennlp.common.from_params - instantiating class <class 'allennlp.data.tokenizers.word_tokenizer.WordTokenizer'> from params {'word_splitter': 'just_spaces_keep_newlines'} and extras set()
+2021-03-15 18:29:29,635 - INFO - allennlp.common.params - dataset_reader.tokenizer.word_splitter = just_spaces_keep_newlines
+2021-03-15 18:29:29,635 - INFO - allennlp.common.registrable - instantiating registered subclass just_spaces_keep_newlines of <class 'allennlp.data.tokenizers.word_splitter.WordSplitter'>

@@ -74,7 +74,7 @@ def evaluate_from_file(archive_path, model_path, overrides=None, eval_suffix='',
         logger.info("%s: %s", key, metric)
 
     output_file = os.path.join(
-        serialization_dir, f"evaluate-metrics{eval_suffix}.json")
+        serialization_dir, f"evaluate-metrics3{eval_suffix}.json")
     if output_file:
         with open(output_file, "w") as file:
             json.dump(metrics, file, indent=4)

@@ -18,7 +18,7 @@ dataset_reader:
   use_objects: true
   articles_num: -1
   use_first: false
-  sort_BM: false
+  sort_BM: true
 train_data_path: train
 validation_data_path: valid
 test_data_path: test

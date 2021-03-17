@@ -1,6 +1,7 @@
 {
     "dataset_reader": {
-        "type": "BM_reader",
+        "type": "BMReader",
+        "articles_num": 5,
         "image_dir": "data/nytimes/images_processed",
         "lazy": true,
         "mongo_host": "nova",
@@ -10,7 +11,7 @@
                 "max_len": 512,
                 "model_name": "roberta-base",
                 "namespace": "bpe",
-                "padding_on_right": true,
+                "padding_on_right": "true",
                 "padding_value": 1
             }
         },
@@ -25,7 +26,7 @@
     "validation_data_path": "valid",
     "test_data_path": "test",
     "trainer": {
-        "num_epochs": 5,
+        "num_epochs": 1,
         "optimizer": "adam"
     }
 }

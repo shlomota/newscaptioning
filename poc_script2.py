@@ -1,9 +1,11 @@
 import os
-import time
+import datetime
 from tell.commands.evaluate import evaluate_from_file as eff
+import shutil
 
 TAT_FOLDER = "/specific/netapp5/joberant/nlp_fall_2021/shlomotannor/newscaptioning/"
 OUTS_FOLDER = "outs"
+model = "9_transformer_objects"
 model = "11_new2"
 
 YAML = "expt/nytimes/{}/config.yaml".format(model)
@@ -20,4 +22,5 @@ if os.path.exists(G_JSONL):
 
 eff(YAML, SER, device=0)
 
-os.rename(G_JSONL, os.path.join(TAT_FOLDER, OUTS_FOLDER, f"generations_{round(time.time())}.jsonl"))
+now = datetime.datetime.now()
+shutil.copyfile(G_JSONL, os.path.join(TAT_FOLDER, OUTS_FOLDER, f"generations_{now.year}_{now.month}_{now.day}_{now.hour}_{now.minute}_{now.second}.jsonl"))

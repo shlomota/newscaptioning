@@ -1,1 +1,1 @@
-from .reader import BMReader
+from BM.data.dataset_readers.reader import BMReader

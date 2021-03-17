@@ -9,3 +9,4 @@ from .nytimes_glove import NYTimesGloveReader
 from .nytimes_position import NYTimesPositionReader
 from .new import NewReader
 from .new2 import NewReader2
+from .BMReader import BMReader

@@ -104,8 +104,6 @@ class TransformerFacesObjectModel(Model):
             output_dict['metadata'] = metadata
             output_dict['attns'] = attns
             output_dict['gen_ids'] = gen_ids.cpu().detach().numpy()
-            #output_dict['gen_types'] = gen_types
-            #output_dict['pi_chosen'] = pi_chosen
 
             # Remove punctuation
             gen_texts = [re.sub(r'[^\w\s]', '', t) for t in gen_texts]

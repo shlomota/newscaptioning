@@ -1,9 +1,13 @@
 Traceback (most recent call last):
-  File "run.py", line 36, in <module>
-    main()
-  File "run.py", line 33, in main
-    train_model_from_file(params_file, serialization_dir)
-  File "run.py", line 29, in train_model_from_file
+  File "/specific/netapp5/joberant/nlp_fall_2021/shlomotannor/anaconda3/envs/tell/bin/allennlp", line 8, in <module>
+    sys.exit(run())
+  File "/specific/netapp5/joberant/nlp_fall_2021/shlomotannor/anaconda3/envs/tell/lib/python3.7/site-packages/allennlp/run.py", line 18, in run
+    main(prog="allennlp")
+  File "/specific/netapp5/joberant/nlp_fall_2021/shlomotannor/anaconda3/envs/tell/lib/python3.7/site-packages/allennlp/commands/__init__.py", line 102, in main
+    args.func(args)
+  File "/specific/netapp5/joberant/nlp_fall_2021/shlomotannor/anaconda3/envs/tell/lib/python3.7/site-packages/allennlp/commands/train.py", line 124, in train_model_from_args
+    args.cache_prefix)
+  File "/specific/netapp5/joberant/nlp_fall_2021/shlomotannor/anaconda3/envs/tell/lib/python3.7/site-packages/allennlp/commands/train.py", line 168, in train_model_from_file
     cache_directory, cache_prefix)
   File "/specific/netapp5/joberant/nlp_fall_2021/shlomotannor/anaconda3/envs/tell/lib/python3.7/site-packages/allennlp/commands/train.py", line 226, in train_model
     cache_prefix)
@@ -11,8 +15,22 @@ Traceback (most recent call last):
     all_datasets = training_util.datasets_from_params(params, cache_directory, cache_prefix)
   File "/specific/netapp5/joberant/nlp_fall_2021/shlomotannor/anaconda3/envs/tell/lib/python3.7/site-packages/allennlp/training/util.py", line 165, in datasets_from_params
     dataset_reader = DatasetReader.from_params(dataset_reader_params)
-  File "/specific/netapp5/joberant/nlp_fall_2021/shlomotannor/anaconda3/envs/tell/lib/python3.7/site-packages/allennlp/common/from_params.py", line 359, in from_params
-    default_to_first_choice=default_to_first_choice)
-  File "/specific/netapp5/joberant/nlp_fall_2021/shlomotannor/anaconda3/envs/tell/lib/python3.7/site-packages/allennlp/common/params.py", line 363, in pop_choice
-    raise ConfigurationError(message)
-allennlp.common.checks.ConfigurationError: 'BM_reader not in acceptable choices for dataset_reader.type: [\'ccgbank\', \'conll2003\', \'conll2000\', \'ontonotes_ner\', \'coref\', \'winobias\', \'event2mind\', \'interleaving\', \'language_modeling\', \'masked_language_modeling\', \'next_token_lm\', \'multiprocess\', \'ptb_trees\', \'drop\', \'squad\', \'quac\', \'triviaqa\', \'qangaroo\', \'srl\', \'semantic_dependencies\', \'seq2seq\', \'sequence_tagging\', \'snli\', \'universal_dependencies\', \'universal_dependencies_multilang\', \'sst_tokens\', \'quora_paraphrase\', \'atis\', \'nlvr\', \'wikitables\', \'template_text2sql\', \'grammar_based_text2sql\', \'quarel\', \'simple_language_modeling\', \'babi\', \'copynet_seq2seq\', \'text_classification_json\']. You should either use the --include-package flag to make sure the correct module is loaded, or use a fully qualified class name in your config file like {"model": "my_module.models.MyModel"} to have it imported automatically.'
+  File "/specific/netapp5/joberant/nlp_fall_2021/shlomotannor/anaconda3/envs/tell/lib/python3.7/site-packages/allennlp/common/from_params.py", line 365, in from_params
+    return subclass.from_params(params=params, **extras)
+  File "/specific/netapp5/joberant/nlp_fall_2021/shlomotannor/anaconda3/envs/tell/lib/python3.7/site-packages/allennlp/common/from_params.py", line 386, in from_params
+    kwargs = create_kwargs(cls, params, **extras)
+  File "/specific/netapp5/joberant/nlp_fall_2021/shlomotannor/anaconda3/envs/tell/lib/python3.7/site-packages/allennlp/common/from_params.py", line 133, in create_kwargs
+    kwargs[name] = construct_arg(cls, name, annotation, param.default, params, **extras)
+  File "/specific/netapp5/joberant/nlp_fall_2021/shlomotannor/anaconda3/envs/tell/lib/python3.7/site-packages/allennlp/common/from_params.py", line 229, in construct_arg
+    return annotation.from_params(params=subparams, **subextras)
+  File "/specific/netapp5/joberant/nlp_fall_2021/shlomotannor/anaconda3/envs/tell/lib/python3.7/site-packages/allennlp/common/from_params.py", line 365, in from_params
+    return subclass.from_params(params=params, **extras)
+  File "/specific/netapp5/joberant/nlp_fall_2021/shlomotannor/anaconda3/envs/tell/lib/python3.7/site-packages/allennlp/common/from_params.py", line 386, in from_params
+    kwargs = create_kwargs(cls, params, **extras)
+  File "/specific/netapp5/joberant/nlp_fall_2021/shlomotannor/anaconda3/envs/tell/lib/python3.7/site-packages/allennlp/common/from_params.py", line 133, in create_kwargs
+    kwargs[name] = construct_arg(cls, name, annotation, param.default, params, **extras)
+  File "/specific/netapp5/joberant/nlp_fall_2021/shlomotannor/anaconda3/envs/tell/lib/python3.7/site-packages/allennlp/common/from_params.py", line 227, in construct_arg
+    return annotation.by_name(subparams)()
+  File "/specific/netapp5/joberant/nlp_fall_2021/shlomotannor/anaconda3/envs/tell/lib/python3.7/site-packages/allennlp/common/registrable.py", line 97, in by_name
+    raise ConfigurationError(f"{name} is not a registered name for {cls.__name__}. "
+allennlp.common.checks.ConfigurationError: 'just_spaces_keep_newlines is not a registered name for WordSplitter. You probably need to use the --include-package flag to load your custom code. Alternatively, you can specify your choices using fully-qualified paths, e.g. {"model": "my_module.models.MyModel"} in which case they will be automatically imported correctly.'

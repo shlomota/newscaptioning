@@ -211,25 +211,29 @@ class NewReader2(DatasetReader):
                     else:
                         obj_feats = np.array([[]])
 
-                yield self.article_to_instance(
+                '''yield self.article_to_instance(
                     paragraphs, named_entities, image, caption, image_path,
                     article['web_url'], pos, face_embeds, obj_feats, image_id, pi_chosen, gen_type=1)
+                '''
+
 
                 # 'new' way of sending every paragraph
                 paragraphs = [p for p in sections if p['type'] == 'paragraph']
 
+                #todo: restore
                 paragraphs_texts = [p["text"] for p in paragraphs]
                 tokenized_corpus = [doc.split(" ") for doc in paragraphs_texts]
                 bm25 = BM25Okapi(tokenized_corpus)
                 query = caption
                 tokenized_query = query.split(" ")
                 paragraphs_scores = bm25.get_scores(tokenized_query)
+
                 df = pd.DataFrame(columns=["paragraph", "score", "i"])
                 df.paragraph = paragraphs
                 df.score = paragraphs_scores
                 df.i = list(range(len(paragraphs)))
-                #df = df.sort_index(ascending=False)
-
+                #df.score = list(range(len(paragraphs)))
+                df = df.sort_index(ascending=True)
 
                 if self.sort_BM:
                     sorted_df = df.sort_values("score", ascending=False)
@@ -243,11 +247,14 @@ class NewReader2(DatasetReader):
                         if text_count > 512:
                             thresh = row.score
                             break
-                    df = df[df.score >= thresh]
+                    if self.use_first:
+                        df = df[(df.score >= thresh) | (df.i == 0)]
+                    else:
+                        df = df[df.score >= thresh]
                 else:
                     df = df.sort_values("score", ascending=False)
 
-                #sort df
+                # sort df
                 n_words = 0
                 named_entities = set()
                 sorted_paragraphs = []
@@ -255,12 +262,12 @@ class NewReader2(DatasetReader):
 
                 if title:
                     sorted_paragraphs.append(title)
-                    named_entities.union(
+                    named_entities = named_entities.union(
                         self._get_named_entities(article['headline']))
                     n_words += len(self.to_token_ids(title))
 
                 if self.use_first:
-                    fp = df[df['i'] == 0]
+                    fp = df[df.i == 0]
                     fp = fp["paragraph"].values.tolist()
                     if fp:
                         fp = fp[0]
@@ -268,11 +275,12 @@ class NewReader2(DatasetReader):
                         n_words += len(self.to_token_ids(text))
                         sorted_paragraphs.append(text)
                         named_entities |= self._get_named_entities(fp)
+                        pi_chosen.append(0)
                     else:
                         print(f"?!{len(paragraphs)}")
 
                 if n_words < 510:
-                    if self.use_first: #if used 1st paragraph, don't reuse
+                    if self.use_first:  # if used 1st paragraph, don't reuse
                         df = df[df['i'] != 0]
 
                     for p, i in zip(df["paragraph"].values.tolist(), df["i"].values.tolist()):
@@ -288,7 +296,6 @@ class NewReader2(DatasetReader):
                 yield self.article_to_instance(
                         sorted_paragraphs, named_entities, image, caption, image_path,
                         article['web_url'], pos, face_embeds, obj_feats, image_id, pi_chosen, gen_type=2)
-
 
     def article_to_instance(self, paragraphs, named_entities, image, caption,
                             image_path, web_url, pos, face_embeds, obj_feats, image_id, pi_chosen, gen_type) -> Instance:

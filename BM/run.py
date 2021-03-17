@@ -4,8 +4,8 @@ from allennlp.common.params import Params
 from allennlp.models import Model
 import shutil
 
-params_file = "config.yaml"
-serialization_dir = "serialization"
+params_file = "BM/config.yaml"
+serialization_dir = "BM/serialization"
 
 
 def train_model_from_file(params_file: str,

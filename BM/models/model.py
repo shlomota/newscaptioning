@@ -25,7 +25,7 @@ from .resnet import resnet152
 class BMModel(Model):
     def __init__(self,
                  vocab: Vocabulary,
-                 criterion: Criterion,
+                 #criterion: Criterion,
                  evaluate_mode: bool = False,
                  attention_dim: int = 1024,
                  hidden_size: int = 1024,
