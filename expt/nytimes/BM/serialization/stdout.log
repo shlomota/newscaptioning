@@ -1,4 +1,4 @@
-2021-03-16 01:05:03,178 - WARNING - allennlp.training.trainer - You provided a validation dataset but patience was set to None, meaning that early stopping is disabled
+2021-03-17 17:41:16,781 - WARNING - allennlp.training.trainer - You provided a validation dataset but patience was set to None, meaning that early stopping is disabled
 articles num: 5
 articles num: 5
 articles num: 5

@@ -4,50 +4,118 @@ Using cache found in /a/home/cc/students/cs/shlomotannor/.cache/torch/hub/pytorc
 
 0it [00:00, ?it/s]
 [A
-102it [00:01, 74.51it/s]
+102it [00:00, 106.56it/s]
 [A
-81744it [00:01, 106.44it/s]
+28677it [00:01, 152.20it/s]
 [A
-165307it [00:01, 152.05it/s]
+57941it [00:01, 217.38it/s]
 [A
-249873it [00:01, 217.19it/s]
+87927it [00:01, 310.45it/s]
 [A
-335839it [00:01, 310.24it/s]
+118163it [00:01, 443.31it/s]
 [A
-400073it [00:02, 442.81it/s]
-[A434314it [00:02, 194023.32it/s]
+148821it [00:01, 632.90it/s]
+[A
+180080it [00:01, 903.37it/s]
+[A
+211297it [00:01, 1288.92it/s]
+[A
+242690it [00:01, 1838.08it/s]
+[A
+274184it [00:01, 2619.28it/s]
+[A
+305678it [00:01, 3728.54it/s]
+[A
+337895it [00:02, 5300.20it/s]
+[A
+368802it [00:02, 7422.95it/s]
+[A
+399718it [00:02, 10496.21it/s]
+[A
+430233it [00:02, 14776.75it/s]
+[A434314it [00:02, 170769.15it/s]
 
-1it [00:02,  2.37s/it]
+1it [00:05,  5.18s/it]
+2it [00:07,  4.20s/it]
+3it [00:09,  3.63s/it]
+4it [00:11,  3.22s/it]
+5it [00:14,  2.97s/it]
+6it [00:14,  2.13s/it]
+7it [00:16,  2.21s/it]
+8it [00:18,  2.25s/it]
 
 0it [00:00, ?it/s]
-[A3052it [00:00, 229273.29it/s]
+[A3052it [00:00, 129422.15it/s]
 
-12it [00:02,  1.66s/it]
-27it [00:02,  1.17s/it]
+9it [00:21,  2.27s/it]
+10it [00:21,  1.64s/it]
+11it [00:23,  1.80s/it]
+12it [00:25,  1.95s/it]
+13it [00:26,  1.42s/it]
+14it [00:28,  1.60s/it]
+15it [00:30,  1.78s/it]
+16it [00:32,  1.88s/it]
+17it [00:32,  1.35s/it]
+18it [00:34,  1.65s/it]
+19it [00:36,  1.73s/it]
+20it [00:39,  1.88s/it]
+21it [00:41,  2.04s/it]
+22it [00:41,  1.46s/it]
+23it [00:43,  1.72s/it]
+24it [00:46,  1.93s/it]
+25it [00:48,  2.08s/it]
+26it [00:51,  2.26s/it]
+27it [00:53,  2.31s/it]
+28it [00:56,  2.38s/it]
+29it [00:58,  2.38s/it]
 
 0it [00:00, ?it/s]
-[A8495it [00:00, 227166.51it/s]
+[A8495it [00:00, 111484.67it/s]
 
-35it [00:02,  1.22it/s]
-39it [00:02, 14.34it/s]
+30it [01:01,  2.46s/it]
+32it [01:03,  2.06s/it]
+33it [01:05,  2.12s/it]
+34it [01:08,  2.16s/it]
+35it [01:10,  2.19s/it]
+36it [01:12,  2.27s/it]
+37it [01:13,  1.66s/it]
+38it [01:13,  1.21s/it]
+39it [01:13,  1.13it/s]
+39it [01:13,  1.88s/it]
 
 Using cache found in /a/home/cc/students/cs/shlomotannor/.cache/torch/hub/pytorch_fairseq_2f7e3f3323
   0%|          | 0/1 [00:00<?, ?it/s]
 
 0it [00:00, ?it/s]
 [A
-102it [00:01, 75.23it/s]
+102it [00:00, 103.22it/s]
 [A
-81556it [00:01, 107.47it/s]
+29069it [00:01, 147.44it/s]
 [A
-165521it [00:01, 153.52it/s]
+59049it [00:01, 210.58it/s]
 [A
-250893it [00:01, 219.30it/s]
+89773it [00:01, 300.75it/s]
 [A
-336719it [00:01, 313.25it/s]
+120995it [00:01, 429.46it/s]
 [A
-401120it [00:02, 447.09it/s]
-[A434314it [00:02, 194546.73it/s]
+152306it [00:01, 613.16it/s]
+[A
+183947it [00:01, 875.21it/s]
+[A
+215731it [00:01, 1248.83it/s]
+[A
+247897it [00:01, 1781.07it/s]
+[A
+279916it [00:01, 2538.34it/s]
+[A
+312033it [00:01, 3613.96it/s]
+[A
+344304it [00:02, 5138.14it/s]
+[A
+375648it [00:02, 7187.01it/s]
+[A
+406367it [00:02, 10165.23it/s]
+[A434314it [00:02, 168302.56it/s]
 
 Traceback (most recent call last):
   File "trainBM.py", line 8, in <module>
@@ -58,8 +126,20 @@ Traceback (most recent call last):
     metrics = trainer.train()
   File "/specific/netapp5/joberant/nlp_fall_2021/shlomotannor/anaconda3/envs/tell/lib/python3.7/site-packages/allennlp/training/trainer.py", line 478, in train
     train_metrics = self._train_epoch(epoch)
-  File "/specific/netapp5/joberant/nlp_fall_2021/shlomotannor/anaconda3/envs/tell/lib/python3.7/site-packages/allennlp/training/trainer.py", line 322, in _train_epoch
-    if torch.isnan(loss):
-TypeError: isnan(): argument 'input' (position 1) must be Tensor, not float
-  0%|          | 0/1 [00:02<?, ?it/s]
+  File "/specific/netapp5/joberant/nlp_fall_2021/shlomotannor/anaconda3/envs/tell/lib/python3.7/site-packages/allennlp/training/trainer.py", line 320, in _train_epoch
+    loss = self.batch_loss(batch_group, for_training=True)
+  File "/specific/netapp5/joberant/nlp_fall_2021/shlomotannor/anaconda3/envs/tell/lib/python3.7/site-packages/allennlp/training/trainer.py", line 261, in batch_loss
+    output_dict = self.model(**batch)
+  File "/specific/netapp5/joberant/nlp_fall_2021/shlomotannor/anaconda3/envs/tell/lib/python3.7/site-packages/torch/nn/modules/module.py", line 550, in __call__
+    result = self.forward(*input, **kwargs)
+  File "/specific/netapp5/joberant/nlp_fall_2021/shlomotannor/newscaptioning/tell/models/BMModel.py", line 85, in forward
+    ctx = [self.roberta(p) for p in context]
+  File "/specific/netapp5/joberant/nlp_fall_2021/shlomotannor/newscaptioning/tell/models/BMModel.py", line 85, in <listcomp>
+    ctx = [self.roberta(p) for p in context]
+  File "/specific/netapp5/joberant/nlp_fall_2021/shlomotannor/anaconda3/envs/tell/lib/python3.7/site-packages/torch/nn/modules/module.py", line 550, in __call__
+    result = self.forward(*input, **kwargs)
+  File "/specific/netapp5/joberant/nlp_fall_2021/shlomotannor/anaconda3/envs/tell/lib/python3.7/site-packages/torch/nn/modules/module.py", line 98, in forward
+    raise NotImplementedError
+NotImplementedError
+  0%|          | 0/1 [00:17<?, ?it/s]
 
