@@ -18,6 +18,19 @@ from pycocoevalcap.bleu.bleu_scorer import BleuScorer
 from tell.modules.criteria import Criterion
 from .resnet import resnet152
 
+def split_list(li, val):
+    result = [[]]
+    i = 0
+    while i < len(li):
+        if li[i] == val:
+            result += [[]]
+            i += 1
+            while i < len(li) and li[i] == val:
+                i += 1
+        else:
+            result[-1].append(li[i])
+            i += 1
+    return result
 
 @Model.register("BMModel")
 class BMModel(Model):
@@ -73,6 +86,8 @@ class BMModel(Model):
                 names: Dict[str, torch.LongTensor] = None,
                 attn_idx=None) -> Dict[str, torch.Tensor]:
 
+        #TODO: understand shape of context, what is roberta/roberta_copy_masks, why are labels identical (perhaps because there's only one example?)
+        #todo: make text not go through roberta before
         print("context: ", context)
         print("image: ", image)
         print("face_embeds: ", face_embeds)
@@ -80,21 +95,26 @@ class BMModel(Model):
         print("names: ", names)
         print("labels: ", labels)
 
+        split_context = split_list(context["roberta"], "BLABLA")
+        assert len(split_context) == len(labels)
 
+        # stage 1: use only resnet of image and roberta of text (and linear layers)
         im = self.resnet(image)
-        ctx = [self.roberta(p) for p in context]
+        # ctx = [self.roberta(p) for p in context]
+        #TODO: use tensors and correct code
+        scores = torch.tensor([im @ p for p in split_context])
+        sm_scores = nn.Softmax()(scores) #use torch nn
+        loss = nn.CrossEntropyLoss(scores, labels)
 
 
-
-
-        # TODO calculate attn between context paragraphs and image
 
         '''caption_ids, target_ids, contexts = self._forward(
             context, image, caption, face_embeds, obj_embeds)
         decoder_out = self.decoder(caption, contexts)'''
 
         output_dict = {
-            'loss': 0
+            'loss': loss,
+            'probs': sm_scores
         }
 
         # During evaluation...
@@ -104,3 +124,5 @@ class BMModel(Model):
         self.n_batches += 1
 
         return output_dict
+
+

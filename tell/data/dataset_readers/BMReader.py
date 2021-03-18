@@ -2,13 +2,13 @@ import logging
 import os
 import random
 import re
-from typing import Dict
+from typing import Dict, List
 
 import numpy as np
 import pymongo
 import torch
 from allennlp.data.dataset_readers.dataset_reader import DatasetReader
-from allennlp.data.fields import ArrayField, MetadataField, TextField
+from allennlp.data.fields import ArrayField, MetadataField, TextField, ListField
 from allennlp.data.instance import Instance
 from allennlp.data.token_indexers import TokenIndexer
 from allennlp.data.tokenizers import Tokenizer
@@ -91,12 +91,24 @@ class BMReader(DatasetReader):
             raise ValueError(f'Unknown split: {split}')
 
         logger.info('Grabbing all article IDs')
-        sample_cursor = self.db.articles.find({
+
+        #TODO: restore this
+        # sample_cursor = self.db.articles.find({
+        #     'split': split,
+        # }, projection=['_id']).sort('_id', pymongo.ASCENDING)
+        # ids = np.array([article['_id'] for article in tqdm(sample_cursor)])
+        # sample_cursor.close()
+        # self.rs.shuffle(ids)
+
+        # TODO: just for debug
+        article = self.db.articles.find_one({
             'split': split,
-        }, projection=['_id']).sort('_id', pymongo.ASCENDING)
-        ids = np.array([article['_id'] for article in tqdm(sample_cursor)])
-        sample_cursor.close()
-        self.rs.shuffle(ids)
+        }, projection=['_id'])
+        ids = np.array([article['_id']])
+
+
+
+
 
         projection = ['_id', 'parsed_section.type', 'parsed_section.text',
                       'parsed_section.hash', 'parsed_section.parts_of_speech',
@@ -113,10 +125,21 @@ class BMReader(DatasetReader):
             article = self.db.articles.find_one(
                 {'_id': {'$eq': article_id}}, projection=projection)
             sections = article['parsed_section']
-            paragraphs = [p for p in sections if p['type'] == 'paragraph']
+
+            paragraphs = []
+            named_entities = set()
+
+
+            paragraphs += [p for p in sections if p['type'] == 'paragraph']
             paragraphs_texts = [p["text"] for p in paragraphs]
+
+            for p in paragraphs:
+                named_entities |= self._get_named_entities(p)
+            named_entities = sorted(named_entities)
+
             tokenized_corpus = [doc.split(" ") for doc in paragraphs_texts]
             bm25 = BM25Okapi(tokenized_corpus)
+
 
             image_positions = article['image_positions']
             for pos in image_positions:
@@ -135,16 +158,6 @@ class BMReader(DatasetReader):
 
 
                 image_id = f'{article_id}_{pos}'
-                paragraphs = []
-                named_entities = set()
-                title = ''
-                if 'main' in article['headline']:
-                    title = article['headline']['main'].strip()
-
-                if title:
-                    paragraphs.append(title)
-                    named_entities = named_entities.union(
-                        self._get_named_entities(article['headline']))
 
                 if self.n_faces is not None:
                     n_persons = self.n_faces
@@ -180,19 +193,16 @@ class BMReader(DatasetReader):
                     else:
                         obj_feats = np.array([[]])
 
-
-                for p in paragraphs:
-                    named_entities |= self._get_named_entities(p)
-
-                named_entities = sorted(named_entities)
                 yield self.article_to_instance(
                         paragraphs,paragraphs_scores, named_entities, image, caption, image_path,
                         article['web_url'], pos, face_embeds, obj_feats, image_id)
 
     def article_to_instance(self, paragraphs, paragraphs_scores, named_entities, image, caption,
                             image_path, web_url, pos, face_embeds, obj_feats, image_id) -> Instance:
-        context = '\n'.join(paragraphs).strip()
+        context = ' BLABLA '.join([p["text"] for p in paragraphs]).strip()
 
+        # context_tokens = [self._tokenizer.tokenize(p["text"]) for p in paragraphs]
+        # context_tokens = [self._tokenizer.tokenize(p["text"]) for p in paragraphs]
         context_tokens = self._tokenizer.tokenize(context)
         caption_tokens = self._tokenizer.tokenize(caption)
         name_token_list = [self._tokenizer.tokenize(n) for n in named_entities]
@@ -207,6 +217,8 @@ class BMReader(DatasetReader):
 
         fields = {
             'context': TextField(context_tokens, self._token_indexers),
+            # 'context': ListTextField([TextField(p, self._token_indexers) for p in context_tokens]),
+            # 'context': ListTextField(context_tokens),
             'names': ListTextField(name_field),
             'image': ImageField(image, self.preprocess),
             'caption': TextField(caption_tokens, self._token_indexers),
