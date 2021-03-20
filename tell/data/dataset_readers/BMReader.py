@@ -8,7 +8,7 @@ import numpy as np
 import pymongo
 import torch
 from allennlp.data.dataset_readers.dataset_reader import DatasetReader
-from allennlp.data.fields import ArrayField, MetadataField, TextField, ListField
+from allennlp.data.fields import ArrayField, MetadataField, TextField, ListField, Field, LabelField
 from allennlp.data.instance import Instance
 from allennlp.data.token_indexers import TokenIndexer
 from allennlp.data.tokenizers import Tokenizer
@@ -153,8 +153,9 @@ class BMReader(DatasetReader):
                 paragraphs_scores = bm25.get_scores(tokenized_query)
 
                 # apply softmax
-                paragraphs_scores = np.exp(paragraphs_scores)
-                paragraphs_scores = paragraphs_scores / paragraphs_scores.sum(0)
+                #TODO: restore?
+                # paragraphs_scores = np.exp(paragraphs_scores)
+                # paragraphs_scores = paragraphs_scores / paragraphs_scores.sum(0)
 
 
                 image_id = f'{article_id}_{pos}'
@@ -193,13 +194,21 @@ class BMReader(DatasetReader):
                     else:
                         obj_feats = np.array([[]])
 
-                yield self.article_to_instance(
-                        paragraphs,paragraphs_scores, named_entities, image, caption, image_path,
+                for i, _ in enumerate(paragraphs):
+                    yield self.article_to_instance(
+                        paragraphs_texts[i],paragraphs_scores[i], named_entities, image, caption, image_path,
                         article['web_url'], pos, face_embeds, obj_feats, image_id)
+                # yield self.article_to_instance(
+                #         paragraphs,paragraphs_scores, named_entities, image, caption, image_path,
+                #         article['web_url'], pos, face_embeds, obj_feats, image_id)
 
-    def article_to_instance(self, paragraphs, paragraphs_scores, named_entities, image, caption,
+    # def article_to_instance(self, paragraphs, paragraphs_scores, named_entities, image, caption,
+    #                         image_path, web_url, pos, face_embeds, obj_feats, image_id) -> Instance:
+
+    def article_to_instance(self, paragraph, paragraph_score, named_entities, image, caption,
                             image_path, web_url, pos, face_embeds, obj_feats, image_id) -> Instance:
-        context = ' BLABLA '.join([p["text"] for p in paragraphs]).strip()
+        # context = ' BLABLA '.join([p["text"] for p in paragraphs]).strip()
+        context = paragraph
 
         # context_tokens = [self._tokenizer.tokenize(p["text"]) for p in paragraphs]
         # context_tokens = [self._tokenizer.tokenize(p["text"]) for p in paragraphs]
@@ -223,7 +232,8 @@ class BMReader(DatasetReader):
             'image': ImageField(image, self.preprocess),
             'caption': TextField(caption_tokens, self._token_indexers),
             'face_embeds': ArrayField(face_embeds, padding_value=np.nan),
-            'labels': ArrayField(paragraphs_scores)
+            'label': ArrayField(np.array([paragraph_score]))
+            # 'labels': ArrayField(paragraphs_score)
         }
 
         if obj_feats is not None:
@@ -235,7 +245,8 @@ class BMReader(DatasetReader):
                     'web_url': web_url,
                     'image_path': image_path,
                     'image_pos': pos,
-                    'image_id': image_id}
+                    'image_id': image_id,
+                    'label': paragraph_score}
         fields['metadata'] = MetadataField(metadata)
 
         return Instance(fields)
