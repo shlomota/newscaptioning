@@ -107,7 +107,7 @@ class BMModel(Model):
 
         # stage 1: use only resnet of image and roberta of text (and linear layers)
         text = context["roberta"]
-        im = self.resnet(image)
+        im = self.resnet(image).detach()
         im_vec = self.relu(self.conv(im).squeeze())
         hiddens = self.roberta.extract_features(context["roberta"]).detach()
         #using only first and last hidden because size can change
