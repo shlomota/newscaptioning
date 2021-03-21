@@ -18,6 +18,19 @@ from pycocoevalcap.bleu.bleu_scorer import BleuScorer
 from tell.modules.criteria import Criterion
 from .resnet import resnet152
 
+def split_list(li, val):
+    result = [[]]
+    i = 0
+    while i < len(li):
+        if li[i] == val:
+            result += [[]]
+            i += 1
+            while i < len(li) and li[i] == val:
+                i += 1
+        else:
+            result[-1].append(li[i])
+            i += 1
+    return result
 
 @Model.register("BMModel")
 class BMModel(Model):
@@ -46,12 +59,19 @@ class BMModel(Model):
         self.resnet = resnet152()
         self.roberta = torch.hub.load(
             'pytorch/fairseq:2f7e3f3323', 'roberta.large')
+        self.roberta.eval()
         self.use_context = use_context
         self.padding_idx = padding_value
         self.evaluate_mode = evaluate_mode
         self.sampling_topk = sampling_topk
         self.sampling_temp = sampling_temp
         self.weigh_bert = weigh_bert
+
+        self.loss_func = nn.MSELoss()
+
+        self.conv = nn.Conv2d(2048, 512, 7)
+        self.linear = nn.Linear(2048, 512)
+        self.relu = nn.ReLU()
         if weigh_bert:
             self.bert_weight = nn.Parameter(torch.Tensor(25))
             nn.init.uniform_(self.bert_weight)
@@ -64,7 +84,7 @@ class BMModel(Model):
 
     def forward(self,  # type: ignore
                 context: Dict[str, torch.LongTensor],
-                labels: torch.Tensor,
+                label: torch.Tensor,
                 image: torch.Tensor,
                 caption: Dict[str, torch.LongTensor],
                 face_embeds: torch.Tensor,
@@ -73,28 +93,45 @@ class BMModel(Model):
                 names: Dict[str, torch.LongTensor] = None,
                 attn_idx=None) -> Dict[str, torch.Tensor]:
 
-        print("context: ", context)
-        print("image: ", image)
-        print("face_embeds: ", face_embeds)
-        print("obj_embeds: ", obj_embeds)
-        print("names: ", names)
-        print("labels: ", labels)
+        #TODO: understand shape of context, what is roberta/roberta_copy_masks, why are labels identical (perhaps because there's only one example?)
+        #todo: make text not go through roberta before
+        # print("context: ", context)
+        # print("image: ", image)
+        # print("face_embeds: ", face_embeds)
+        # print("obj_embeds: ", obj_embeds)
+        # print("names: ", names)
+        # print("labels: ", label)
 
+        # split_context = split_list(context["roberta"], "BLABLA")
+        # assert len(split_context) == len(labels)
 
+        # stage 1: use only resnet of image and roberta of text (and linear layers)
+        text = context["roberta"]
         im = self.resnet(image)
-        ctx = [self.roberta(p) for p in context]
+        im_vec = self.relu(self.conv(im).squeeze())
+        hiddens = self.roberta.extract_features(context["roberta"]).detach()
+        #using only first and last hidden because size can change
+        h = torch.cat([hiddens[:,0,:], hiddens[:,-1,:]], dim=-1)
+        text_vec = self.relu(self.linear(h))
+
+        # ctx = [self.roberta(p) for p in context]
+        #TODO: use tensors and correct code
+        # scores = torch.tensor([im @ p for p in split_context])
+        score = torch.bmm(text_vec.unsqueeze(1),  im_vec.unsqueeze(-1)).squeeze()
+        # sm_scores = nn.Softmax()(scores) #use torch nn
+
+        loss = self.loss_func(score, label)
+        # loss = nn.CrossEntropyLoss(scores, labels)
 
 
-
-
-        # TODO calculate attn between context paragraphs and image
 
         '''caption_ids, target_ids, contexts = self._forward(
             context, image, caption, face_embeds, obj_embeds)
         decoder_out = self.decoder(caption, contexts)'''
 
         output_dict = {
-            'loss': 0
+            'loss': loss,
+            'probs': score
         }
 
         # During evaluation...
@@ -104,3 +141,5 @@ class BMModel(Model):
         self.n_batches += 1
 
         return output_dict
+
+
