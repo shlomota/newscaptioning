@@ -5,8 +5,8 @@ import shutil
 
 TAT_FOLDER = "/specific/netapp5/joberant/nlp_fall_2021/shlomotannor/newscaptioning/"
 OUTS_FOLDER = "outs"
-model = "9_transformer_objects"
-model = "11_new2"
+# model = "9_transformer_objects"
+model = "BMTestModel"
 
 YAML = "expt/nytimes/{}/config.yaml".format(model)
 YAML = os.path.join(TAT_FOLDER,YAML)

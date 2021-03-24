@@ -6,7 +6,9 @@ from typing import Dict
 
 import numpy as np
 import pymongo
+import shutil
 import torch
+from allennlp.data import DataIterator
 from allennlp.data.dataset_readers.dataset_reader import DatasetReader
 from allennlp.data.fields import ArrayField, MetadataField, TextField
 from allennlp.data.instance import Instance
@@ -19,12 +21,13 @@ from torchvision.transforms import Compose, Normalize, ToTensor
 from tqdm import tqdm
 import pandas as pd
 
+from tell.commands.bm_evaluate import get_model_from_file, evaluate
+from tell.commands.train import yaml_to_params
 from tell.data.fields import ImageField, ListTextField
 
 from rank_bm25 import BM25Okapi
 
 logger = logging.getLogger(__name__)  # pylint: disable=invalid-name
-
 
 SPACE_NORMALIZER = re.compile(r"\s+")
 
@@ -34,6 +37,17 @@ def tokenize_line(line):
     line = line.strip()
     return line.split()
 
+
+CONFIG_PATH = "expt/nytimes/BM/config_BMTestModel.yaml"
+BASE_PATH = "/a/home/cc/students/cs/shlomotannor/nlp_course/newscaptioning/"
+SERIALIZATION_DIR = os.path.join(BASE_PATH, "expt/nytimes/BM/serialization")
+
+
+def get_bmmodel():
+    print("directory content:", os.listdir(SERIALIZATION_DIR))
+    shutil.rmtree(SERIALIZATION_DIR)
+    print("after remove")
+    return get_model_from_file(CONFIG_PATH, SERIALIZATION_DIR)
 
 @DatasetReader.register('new2r')
 class NewReader2R(DatasetReader):
@@ -86,6 +100,7 @@ class NewReader2R(DatasetReader):
         self.articles_num = articles_num
         self.use_first = use_first
         self.sort_BM = sort_BM
+        self.model = get_bmmodel()
 
     @overrides
     def _read(self, split: str):
@@ -111,7 +126,7 @@ class NewReader2R(DatasetReader):
             self.articles_num = len(ids)
 
         print(f'articles num: {self.articles_num}')
-
+        self.articles_num = 20
         for article_id in ids[:self.articles_num]:
             article = self.db.articles.find_one(
                 {'_id': {'$eq': article_id}}, projection=projection)
@@ -126,13 +141,11 @@ class NewReader2R(DatasetReader):
                 if 'main' in article['headline']:
                     title = article['headline']['main'].strip()
 
-
                 if title:
                     paragraphs.append(title)
                     named_entities.union(
                         self._get_named_entities(article['headline']))
                     n_words += len(self.to_token_ids(title))
-
 
                 caption = sections[pos]['text'].strip()
                 if not caption:
@@ -145,8 +158,7 @@ class NewReader2R(DatasetReader):
                 else:
                     n_persons = 4
 
-
-                #old way - 1st + around image
+                # old way - 1st + around image
                 pi_chosen = []
                 before = []
                 after = []
@@ -158,7 +170,6 @@ class NewReader2R(DatasetReader):
                         named_entities |= self._get_named_entities(section)
                         pi_chosen.append(k)
                         break
-
 
                 while True:
                     if i > k and sections[i]['type'] == 'paragraph':
@@ -216,13 +227,18 @@ class NewReader2R(DatasetReader):
                     article['web_url'], pos, face_embeds, obj_feats, image_id, pi_chosen, gen_type=1)
                 '''
 
-
                 # 'new' way of sending every paragraph
                 paragraphs = [p for p in sections if p['type'] == 'paragraph']
 
-                #todo: restore
+                # todo: restore
                 paragraphs_texts = [p["text"] for p in paragraphs]
+                tokened = [self._tokenizer.tokenize(paragraphs_texts[0])]
+                test_field = TextField(tokened, self._token_indexers)
                 tokenized_corpus = [doc.split(" ") for doc in paragraphs_texts]
+
+                results = self.model.forward(context=[test_field], label=torch.tensor([[1]]),
+                                             image=ImageField(image, self.preprocess))
+                print("\n\nRESULTS:\n\n", results)
                 bm25 = BM25Okapi(tokenized_corpus)
                 query = caption
                 tokenized_query = query.split(" ")
@@ -232,7 +248,7 @@ class NewReader2R(DatasetReader):
                 df.paragraph = paragraphs
                 df.score = paragraphs_scores
                 df.i = list(range(len(paragraphs)))
-                #df.score = list(range(len(paragraphs)))
+                # df.score = list(range(len(paragraphs)))
                 df = df.sort_index(ascending=True)
 
                 if self.sort_BM:
@@ -294,11 +310,12 @@ class NewReader2R(DatasetReader):
 
                 named_entities = sorted(named_entities)
                 yield self.article_to_instance(
-                        sorted_paragraphs, named_entities, image, caption, image_path,
-                        article['web_url'], pos, face_embeds, obj_feats, image_id, pi_chosen, gen_type=2)
+                    sorted_paragraphs, named_entities, image, caption, image_path,
+                    article['web_url'], pos, face_embeds, obj_feats, image_id, pi_chosen, gen_type=2)
 
     def article_to_instance(self, paragraphs, named_entities, image, caption,
-                            image_path, web_url, pos, face_embeds, obj_feats, image_id, pi_chosen, gen_type) -> Instance:
+                            image_path, web_url, pos, face_embeds, obj_feats, image_id, pi_chosen,
+                            gen_type) -> Instance:
         context = '\n'.join(paragraphs).strip()
 
         context_tokens = self._tokenizer.tokenize(context)

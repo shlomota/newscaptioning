@@ -4,7 +4,7 @@
         "articles_num": -1,
         "image_dir": "/a/home/cc/students/cs/shlomotannor/nlp_course/newscaptioning/data/nytimes/images_processed",
         "lazy": true,
-        "mongo_host": "nova",
+        "mongo_host": "localhost",
         "token_indexers": {
             "roberta": {
                 "type": "roberta",
