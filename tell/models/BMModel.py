@@ -70,7 +70,8 @@ class BMModel(Model):
         self.loss_func = nn.MSELoss()
 
         self.conv = nn.Conv2d(2048, 512, 7)
-        self.linear = nn.Linear(2048, 512)
+        # self.linear = nn.Linear(2048, 512)
+        self.linear = nn.Linear(1024, 512)
         self.relu = nn.ReLU()
         if weigh_bert:
             self.bert_weight = nn.Parameter(torch.Tensor(25))
@@ -109,14 +110,14 @@ class BMModel(Model):
         im = self.resnet(image).detach()
         im_vec = self.relu(self.conv(im).squeeze())
         hiddens = self.roberta.extract_features(context["roberta"]).detach()
-        #using only first and last hidden because size can change
-        h = torch.cat([hiddens[:,0,:], hiddens[:,-1,:]], dim=-1)
-        # h = torch.sum(hiddens, dim=1)
+        # using only first and last hidden because size can change
+        # h = torch.cat([hiddens[:,0,:], hiddens[:,-1,:]], dim=-1)
+        h = torch.sum(hiddens, dim=1)
         text_vec = self.relu(self.linear(h))
 
-        #TODO: use tensors and correct code
+        # TODO: use tensors and correct code
         # scores = torch.tensor([im @ p for p in split_context])
-        score = torch.bmm(text_vec.unsqueeze(1),  im_vec.unsqueeze(-1)).squeeze()
+        score = torch.bmm(text_vec.unsqueeze(1), im_vec.unsqueeze(-1)).squeeze()
         # sm_scores = nn.Softmax()(scores) #use torch nn
 
         loss = self.loss_func(score, label)
