@@ -34,8 +34,8 @@ def split_list(li, val):
             i += 1
     return result
 
-@Model.register("BM2Model")
-class BM2Model(Model):
+@Model.register("BM3Model")
+class BM3Model(Model):
     def __init__(self,
                  vocab: Vocabulary,
                  criterion: Criterion,

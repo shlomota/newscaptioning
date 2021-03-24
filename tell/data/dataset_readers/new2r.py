@@ -38,7 +38,7 @@ def tokenize_line(line):
     return line.split()
 
 
-CONFIG_PATH = "expt/nytimes/BM/config_BMTestModel.yaml"
+CONFIG_PATH = "expt/nytimes/BM/config.yaml"
 BASE_PATH = "/a/home/cc/students/cs/shlomotannor/nlp_course/newscaptioning/"
 SERIALIZATION_DIR = os.path.join(BASE_PATH, "expt/nytimes/BM/serialization")
 
