@@ -96,8 +96,10 @@ class RobertaTokenIndexer(TokenIndexer[int]):
         assert len(words) == len(copy_masks)
 
         # Enforce maximum length constraint
-        words = words[:self._max_len - 2]
-        copy_masks = copy_masks[:self._max_len - 2]
+        if self._max_len > 0:
+            words = words[:self._max_len - 2]
+            copy_masks = copy_masks[:self._max_len - 2]
+
         words = ['<s>'] + words + ['</s>']
         copy_masks = [0] + copy_masks + [0]
 

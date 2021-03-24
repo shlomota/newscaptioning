@@ -10,3 +10,4 @@ from .transformer_glove import TransformerGloveModel
 from .transformer_pointer import TransformerPointerModel
 from .transformer_pointer_2 import TransformerPointer2Model
 from .BMModel import BMModel
+from .BM2Model import BM2Model

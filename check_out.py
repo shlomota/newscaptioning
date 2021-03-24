@@ -3,9 +3,9 @@ import time
 from pathlib import Path
 import os
 
-output = "poc2.out"
+username = "shlomotannor"
 if len(sys.argv)>1:
-    output = sys.argv[1]
+    username = sys.argv[1]
 
 class bcolors:
     HEADER = '\033[95m'
@@ -18,8 +18,10 @@ class bcolors:
     BOLD = '\033[1m'
     UNDERLINE = '\033[4m'
 
+
+
 while True:
-    if os.popen('squeue -u shlomotannor').read().find('shlomota') == -1:
+    if os.popen(f'squeue -u {username}').read().find(username[:5]) == -1:
         print('                                                  ', end='\r')
         print(bcolors.OKGREEN+"Done."+bcolors.ENDC, end='\r')
     else:

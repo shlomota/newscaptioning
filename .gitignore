@@ -1,3 +1,13 @@
+*.pyc
+*.err
+*.out
+expt/*
+!expt/*.yaml
+data/
+outs/
+mongodb-database-tools-ubuntu2004-x86_64-100.3.0/
+apex/
+*.log
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

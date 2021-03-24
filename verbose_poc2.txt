@@ -1,0 +1,335 @@
+nova
+inst <class 'allennlp.data.dataset_readers.dataset_reader._LazyInstances'> ['__abstractmethods__', '__class__', '__class_getitem__', '__delattr__', '__dict__', '__dir__', '__doc__', '__eq__', '__format__', '__ge__', '__getattribute__', '__gt__', '__hash__', '__init__', '__init_subclass__', '__iter__', '__le__', '__lt__', '__module__', '__ne__', '__new__', '__orig_bases__', '__parameters__', '__reduce__', '__reduce_ex__', '__repr__', '__setattr__', '__sizeof__', '__slots__', '__str__', '__subclasshook__', '__weakref__', '_abc_impl', 'cache_file', 'deserialize', 'instance_generator', 'serialize'] <allennlp.data.dataset_readers.dataset_reader._LazyInstances object at 0x7f356e95ca90>
+article_id 4eca8f2c-32f7-5a24-92ca-763cabb1738c
+article_id 6027c2f8-9759-5139-b27d-89017b46d2f9
+article_id 5c881bc0-f41e-521f-a93c-9f4f36efb75e
+article_id 1e7505fa-31df-5f50-a5c1-01369b941384
+article_id a9d91a6e-ce33-5d30-9948-5c4038e50499
+article_id 887c6eee-08b5-5efa-b329-058ac2a1851d
+article_id 4d5a29ac-6033-568f-b9a6-075262d7b8a0
+article_id 781d246d-cd58-5844-bb21-8f182f0251d2
+article_id 42d769de-c619-5ca3-b45e-e7fd3f22d753
+article_id 50de6978-49b8-57d5-8d01-66eecf4a0f30
+0
+gen: The playwright and actress Katherine Roberts with a doll in The Little Girl
+ref: Alexa Skye Swinton in the Hartford Stage production of Bess Wohls Make Believe
+bleu-1: 0.07692307691124271
+bleu-2: 2.5318484173115386e-09
+bleu-3: 8.352713246747135e-12
+bleu-4: 4.913270547335137e-13
+
+1
+gen: The playwright and actress Katherine Roberts with a doll in The Little Girl
+ref: Alexa Skye Swinton in the Hartford Stage production of Bess Wohls Make Believe
+bleu-1: 0.07692307691124271
+bleu-2: 2.5318484173115386e-09
+bleu-3: 8.352713246747135e-12
+bleu-4: 4.913270547335137e-13
+
+2
+gen: Joseph R Biden Jr in the 1980s
+ref: Joseph R Biden Jr then the chairman of the Senate Judiciary Committee in 1990 During his time on the committee Mr Biden coauthored crime legislation that his critics say helped lay the groundwork for mass incarceration
+bleu-1: 0.013609219343924776
+bleu-2: 0.010394212965341683
+bleu-3: 0.008820118203843192
+bleu-4: 0.007224134232791357
+
+3
+gen: Jason Bowen in Native Son
+ref: Galen Ryan Kane right and Anthony Bowden in the Acting Companys production of Native Son
+bleu-1: 0.0812011699094872
+bleu-2: 0.0524151297906901
+bleu-3: 4.985794460911997e-07
+bleu-4: 1.7017510926869262e-09
+
+4
+gen: Dr Leslie Bottrell a yoga instructor at her Manhattan apartment building MirrorW80 which has a livetoface class
+ref: Dr Bottrell varies her fitness routine with punching exercises on equipment that also has a digital instructor
+bleu-1: 0.35294117642906575
+bleu-2: 0.14852213142875503
+bleu-3: 1.137183009624825e-06
+bleu-4: 3.2014060611861934e-09
+
+5
+gen: Dr Leslie Bottrell right with a student Mandy L Smith at a studio in the West Village
+ref: An instructor on the Mirror device puts her through her paces
+bleu-1: 0.05882352940830456
+bleu-2: 1.9174124720021137e-09
+bleu-3: 6.258159277801815e-12
+bleu-4: 3.63749956686016e-13
+
+6
+gen: Dr Leslie Bottrell a yoga instructor at her Manhattan apartment building Mirror which has a studio and a studio
+ref: Dr Bottrell varies her fitness routine with punching exercises on equipment that also has a digital instructor
+bleu-1: 0.3157894736675901
+bleu-2: 0.1324532356993396
+bleu-3: 1.010552174586843e-06
+bleu-4: 2.833929617442683e-09
+
+7
+gen: Joseph R Biden Jr is being asked to face his record on race
+ref: Joseph R Biden Jr then the chairman of the Senate Judiciary Committee in 1990 During his time on the committee Mr Biden coauthored crime legislation that his critics say helped lay the groundwork for mass incarceration
+bleu-1: 0.07867572211500157
+bleu-2: 0.05790376364192735
+bleu-3: 0.047014076759732626
+bleu-4: 0.036482042416751195
+
+8
+gen: The New York State Theater at Lincoln Center where Mr Koch was a member of the advisory council
+ref: Mr Koch donated the money that allowed for the renovation of the fountains outside the Metropolitan Museum of Art completed in 2012
+bleu-1: 0.17794164507285273
+bleu-2: 0.12947156432300141
+bleu-3: 9.431330725053943e-07
+bleu-4: 2.5868988322852934e-09
+
+9
+gen: David Zammiello the president of Project Quest said the training was a way of preparing workers for betterpaid more highly skilled jobs that were less vulnerable but in demand
+ref: David Zammiello executive director of Project Quest These are not the kids coming out of school looking for a job he said These are people looking for a second chance
+bleu-1: 0.3331396539513686
+bleu-2: 0.1856978779594404
+bleu-3: 0.1072567949655421
+bleu-4: 1.463293207089459e-05
+
+10
+gen: Avigail Rodriguez 26 who is from San Antonio has been working as a nurses assistant in San Antonio
+ref: Avigail Rodriguez a former Project Quest student works in the emergency room at Metropolitan Methodist Hospital in San Antonio as a registered nurse The training helped her nearly triple her wage
+bleu-1: 0.1888723609086801
+bleu-2: 0.14691332114027358
+bleu-3: 0.0868523848717295
+bleu-4: 1.2068386626552946e-05
+
+11
+gen: The Belmont Stakes on Saturday will be the 12th horse in the field to compete in the Triple Crown and the Belmont
+ref: Who do you like
+bleu-1: 4.545454545247934e-17
+bleu-2: 4.652421051775846e-17
+bleu-3: 4.7655095357732085e-17
+bleu-4: 4.885326643972907e-17
+
+12
+gen: A class at the New York City building
+ref: A resident listens to the Headspace app in the meditation room at the Pierrepont in Brooklyn Heights
+bleu-1: 0.12174467522894507
+bleu-2: 0.07514244491082164
+bleu-3: 6.735130786602015e-07
+bleu-4: 2.110433640665056e-09
+
+13
+gen: David H Koch in 2012
+ref: David Koch attends an opening night gala at Carnegie Hall in 2015
+bleu-1: 0.14795817830578073
+bleu-2: 3.0201836675986155e-09
+bleu-3: 9.084709822110616e-12
+bleu-4: 5.514075741313054e-13
+
+14
+gen: The Yankees Gio Urshela hit a tworun homer in the sixth inning
+ref: Gio Urshela hit a tworun home run against the Red Sox
+bleu-1: 0.4999999999583334
+bleu-2: 0.4264014326740723
+bleu-3: 0.37924470133576504
+bleu-4: 0.3318077402524286
+
+{0: {'bleu-1': 7.692307691124271, 'bleu-2': 2.5318484173115384e-07, 'bleu-3': 8.352713246747135e-10, 'bleu-4': 4.913270547335137e-11}, 1: {'bleu-1': 7.692307691124271, 'bleu-2': 2.5318484173115384e-07, 'bleu-3': 8.352713246747135e-10, 'bleu-4': 4.913270547335137e-11}, 2: {'bleu-1': 1.3609219343924777, 'bleu-2': 1.0394212965341683, 'bleu-3': 0.8820118203843192, 'bleu-4': 0.7224134232791357}, 3: {'bleu-1': 8.12011699094872, 'bleu-2': 5.24151297906901, 'bleu-3': 4.985794460911997e-05, 'bleu-4': 1.7017510926869261e-07}, 4: {'bleu-1': 35.29411764290658, 'bleu-2': 14.852213142875502, 'bleu-3': 0.0001137183009624825, 'bleu-4': 3.201406061186193e-07}, 5: {'bleu-1': 5.882352940830456, 'bleu-2': 1.9174124720021137e-07, 'bleu-3': 6.258159277801815e-10, 'bleu-4': 3.63749956686016e-11}, 6: {'bleu-1': 31.578947366759007, 'bleu-2': 13.245323569933959, 'bleu-3': 0.00010105521745868429, 'bleu-4': 2.833929617442683e-07}, 7: {'bleu-1': 7.867572211500157, 'bleu-2': 5.790376364192735, 'bleu-3': 4.701407675973263, 'bleu-4': 3.6482042416751197}, 8: {'bleu-1': 17.794164507285274, 'bleu-2': 12.947156432300142, 'bleu-3': 9.431330725053943e-05, 'bleu-4': 2.586898832285293e-07}, 9: {'bleu-1': 33.313965395136854, 'bleu-2': 18.56978779594404, 'bleu-3': 10.725679496554209, 'bleu-4': 0.001463293207089459}, 10: {'bleu-1': 18.887236090868008, 'bleu-2': 14.69133211402736, 'bleu-3': 8.685238487172949, 'bleu-4': 0.0012068386626552946}, 11: {'bleu-1': 4.545454545247934e-15, 'bleu-2': 4.652421051775846e-15, 'bleu-3': 4.765509535773209e-15, 'bleu-4': 4.885326643972907e-15}, 12: {'bleu-1': 12.174467522894506, 'bleu-2': 7.514244491082164, 'bleu-3': 6.735130786602015e-05, 'bleu-4': 2.110433640665056e-07}, 13: {'bleu-1': 14.795817830578073, 'bleu-2': 3.0201836675986156e-07, 'bleu-3': 9.084709822110616e-10, 'bleu-4': 5.514075741313054e-11}, 14: {'bleu-1': 49.99999999583334, 'bleu-2': 42.64014326740723, 'bleu-3': 37.924470133576506, 'bleu-4': 33.18077402524286}}
+0
+gen: Colin Farrell in Dumbo
+ref: Karl Urban in The Boys
+bleu-1: 0.19470019567050137
+bleu-2: 7.109445940997322e-09
+bleu-3: 2.6999515154283422e-11
+bleu-4: 1.97867090930997e-12
+
+1
+gen: The San Antonio program has a 5 million budget of 5 million to 5 million
+ref: The headquarters of Project Quest are on the campus of Our Lady of the Lake University in San Antonio It was started by community groups
+bleu-1: 0.13691123172376976
+bleu-2: 0.07085829427461669
+bleu-3: 5.831354717846652e-07
+bleu-4: 1.706669274605619e-09
+
+2
+gen: The Metropolitan Museum of Art now called David H Koch Plaza was named after Mr Koch
+ref: Mr Koch donated the money that allowed for the renovation of the fountains outside the Metropolitan Museum of Art completed in 2012
+bleu-1: 0.25773347951439796
+bleu-2: 0.2173399532117726
+bleu-3: 0.16676576084989492
+bleu-4: 0.12513512193794385
+
+3
+gen: Colin Farrell in Dumbo
+ref: Karl Urban in The Boys
+bleu-1: 0.19470019567050137
+bleu-2: 7.109445940997322e-09
+bleu-3: 2.6999515154283422e-11
+bleu-4: 1.97867090930997e-12
+
+4
+gen: Sophie Siff in The Boys
+ref: Danny Trejo in Machete
+bleu-1: 0.19999999996000023
+bleu-2: 7.071067810274489e-09
+bleu-3: 2.5543647739782087e-11
+bleu-4: 1.699044244302013e-12
+
+5
+gen: A student at the New York City gym has a studio in a rental building that is owned by Friedland Properties
+ref: Leslie Bottrell selects a workout on the Mirror control pad in the yoga studio of 222W80 her rental building on the Upper West Side
+bleu-1: 0.24767939990503487
+bleu-2: 0.10361172664812189
+bleu-3: 7.882682798799346e-07
+bleu-4: 2.203823930500646e-09
+
+6
+gen: The Belmont Stakes will be the 12th horse in the field to compete in all three Triple Crown races
+ref: Who do you like
+bleu-1: 5.2631578944598344e-17
+bleu-2: 5.4073807040662474e-17
+bleu-3: 5.561282936163367e-17
+bleu-4: 5.725998731205232e-17
+
+7
+gen: Avigail Rodriguez 26 who is from Mexico is a student at Project Quest a training program that helps people become more highly skilled
+ref: Avigail Rodriguez a former Project Quest student works in the emergency room at Metropolitan Methodist Hospital in San Antonio as a registered nurse The training helped her nearly triple her wage
+bleu-1: 0.27634761650989403
+bleu-2: 0.13319933108935908
+bleu-3: 8.418640175830983e-07
+bleu-4: 2.1424427430684617e-09
+
+8
+gen: The campus of the University of San Antonio
+ref: The headquarters of Project Quest are on the campus of Our Lady of the Lake University in San Antonio It was started by community groups
+bleu-1: 0.1194329682368615
+bleu-2: 0.07818723105911253
+bleu-3: 4.955432299983454e-07
+bleu-4: 1.3057189762197092e-09
+
+9
+gen: The Yankees added two starting pitchers Zack Greinke and Aaron Sanchez to a hospital for tests
+ref: Aaron Boone said his teams mindset was Nothings going to get in our way and nothings going to stop us
+bleu-1: 0.14602514680763531
+bleu-2: 2.7534765741659985e-09
+bleu-3: 7.49929386239473e-12
+bleu-4: 3.986906361503845e-13
+
+10
+gen: Gio Urshela who was hit by a foul ball in the sixth was called out on the Yankees game Sunday
+ref: Aaron Boone said his teams mindset was Nothings going to get in our way and nothings going to stop us
+bleu-1: 0.09999999999000005
+bleu-2: 2.294157338473184e-09
+bleu-3: 6.63729770955094e-12
+bleu-4: 3.621439573798803e-13
+
+11
+gen: Michael Keaton and Danny DeVito in Dumbo
+ref: Michael Keaton and Eva Green in Dumbo
+bleu-1: 0.7142857140816329
+bleu-2: 0.5976143044893356
+bleu-3: 0.41491326655337923
+bleu-4: 6.5005932581807e-05
+
+12
+gen: Dr Leslie Bottrell right with her yoga instructor Marissa C C C Chetrit the president of the Bloomstone Group a real estate advisory firm said the companys new video was a new way of showing techSavvy residents and potential residents that a building is on the cutting edge
+ref: An instructor on the Mirror device puts her through her paces
+bleu-1: 0.08333333333159725
+bleu-2: 0.042107596052439404
+bleu-3: 3.377958850306401e-07
+bleu-4: 9.620278342821094e-10
+
+13
+gen: David Zammiello president of Project Quest said the program was the largest sustained earnings impact weve ever seen in a workforce development program
+ref: David Zammiello executive director of Project Quest These are not the kids coming out of school looking for a job he said These are people looking for a second chance
+bleu-1: 0.2565580047852825
+bleu-2: 0.16064003161943485
+bleu-3: 0.09677664494267071
+bleu-4: 1.3521543732645353e-05
+
+14
+gen: The Mirror a streaming fitness device with ondemand instructor has a studio in the gym at 49 Chambers in Brooklyn Heights
+ref: A lounge next to the meditation room at the Pierrepont a rental building in Brooklyn Heights
+bleu-1: 0.2857142857006803
+bleu-2: 0.16903085093745304
+bleu-3: 0.11456697640101965
+bleu-4: 1.7001078097529507e-05
+
+{0: {'bleu-1': 19.470019567050137, 'bleu-2': 7.109445940997322e-07, 'bleu-3': 2.6999515154283424e-09, 'bleu-4': 1.97867090930997e-10}, 1: {'bleu-1': 13.691123172376976, 'bleu-2': 7.085829427461669, 'bleu-3': 5.831354717846652e-05, 'bleu-4': 1.7066692746056189e-07}, 2: {'bleu-1': 25.773347951439796, 'bleu-2': 21.73399532117726, 'bleu-3': 16.67657608498949, 'bleu-4': 12.513512193794385}, 3: {'bleu-1': 19.470019567050137, 'bleu-2': 7.109445940997322e-07, 'bleu-3': 2.6999515154283424e-09, 'bleu-4': 1.97867090930997e-10}, 4: {'bleu-1': 19.999999996000025, 'bleu-2': 7.07106781027449e-07, 'bleu-3': 2.5543647739782087e-09, 'bleu-4': 1.699044244302013e-10}, 5: {'bleu-1': 24.76793999050349, 'bleu-2': 10.36117266481219, 'bleu-3': 7.882682798799346e-05, 'bleu-4': 2.203823930500646e-07}, 6: {'bleu-1': 5.263157894459834e-15, 'bleu-2': 5.407380704066247e-15, 'bleu-3': 5.561282936163367e-15, 'bleu-4': 5.725998731205232e-15}, 7: {'bleu-1': 27.634761650989404, 'bleu-2': 13.319933108935908, 'bleu-3': 8.418640175830983e-05, 'bleu-4': 2.1424427430684617e-07}, 8: {'bleu-1': 11.94329682368615, 'bleu-2': 7.818723105911253, 'bleu-3': 4.955432299983454e-05, 'bleu-4': 1.3057189762197093e-07}, 9: {'bleu-1': 14.602514680763532, 'bleu-2': 2.753476574165998e-07, 'bleu-3': 7.49929386239473e-10, 'bleu-4': 3.986906361503845e-11}, 10: {'bleu-1': 9.999999999000005, 'bleu-2': 2.2941573384731838e-07, 'bleu-3': 6.63729770955094e-10, 'bleu-4': 3.6214395737988035e-11}, 11: {'bleu-1': 71.4285714081633, 'bleu-2': 59.76143044893356, 'bleu-3': 41.49132665533792, 'bleu-4': 0.006500593258180701}, 12: {'bleu-1': 8.333333333159725, 'bleu-2': 4.210759605243941, 'bleu-3': 3.377958850306401e-05, 'bleu-4': 9.620278342821094e-08}, 13: {'bleu-1': 25.655800478528253, 'bleu-2': 16.064003161943486, 'bleu-3': 9.677664494267072, 'bleu-4': 0.0013521543732645353}, 14: {'bleu-1': 28.57142857006803, 'bleu-2': 16.903085093745304, 'bleu-3': 11.456697640101964, 'bleu-4': 0.0017001078097529506}, 'loss': 4.321099281311035}
+0
+gen: A gym at 49 Chambers a former bank building in Lower Manhattan thats been converted to a luxury condominium
+ref: A lounge next to the meditation room at the Pierrepont a rental building in Brooklyn Heights
+bleu-1: 0.3157894736675901
+bleu-2: 0.1324532356993396
+bleu-3: 1.010552174586843e-06
+bleu-4: 2.833929617442683e-09
+
+1
+gen: The Yankees C C Sabathia hit a tworun homer in the first inning
+ref: Gio Urshela hit a tworun home run against the Red Sox
+bleu-1: 0.30769230766863914
+bleu-2: 0.22645540681077378
+bleu-3: 0.1670542649477928
+bleu-4: 2.6130226594483132e-05
+
+2
+gen: The New York State Theater at Lincoln Center which Mr Koch helped to renovate
+ref: Mr Koch donated 100 million toward the renovation of what was then known as the New York State Theater at Lincoln Center and it was renamed in his honor
+bleu-1: 0.22019069252835932
+bleu-2: 0.20152042218906926
+bleu-3: 0.17962652029124124
+bleu-4: 0.16391390246012363
+
+3
+gen: David H Koch in 2013 He donated 100 million to the Metropolitan Museum of Art 11 years ago
+ref: David Koch attends an opening night gala at Carnegie Hall in 2015
+bleu-1: 0.16666666665740745
+bleu-2: 3.1311214552466808e-09
+bleu-3: 8.493628895592508e-12
+bleu-4: 4.49569817535607e-13
+
+4
+gen: Michael Keaton and Robin Cloud in Passing A Family in Black and White
+ref: Michael Keaton and Eva Green in Dumbo
+bleu-1: 0.30769230766863914
+bleu-2: 0.22645540681077378
+bleu-3: 0.1670542649477928
+bleu-4: 2.6130226594483132e-05
+
+5
+gen: Mirror a streaming fitness device with ondemand instructor is a goto exercise solution for a Manhattan apartment building
+ref: Leslie Bottrell selects a workout on the Mirror control pad in the yoga studio of 222W80 her rental building on the Upper West Side
+bleu-1: 0.11942188508236248
+bleu-2: 2.243546559768973e-09
+bleu-3: 6.085951043748198e-12
+bleu-4: 3.221308505353116e-13
+
+6
+gen: Jason Bowen in Bigger at the Duke on 42nd Street
+ref: Galen Ryan Kane right and Anthony Bowden in the Acting Companys production of Native Son
+bleu-1: 0.12130613191826554
+bleu-2: 2.8592129492812973e-09
+bleu-3: 8.526129513336405e-12
+bleu-4: 4.813961623101862e-13
+
+7
+gen: Robin Cloud in Passing A Family in Black and White
+ref: Danny Trejo in Machete
+bleu-1: 0.09999999999000012
+bleu-2: 3.333333332981484e-09
+bleu-3: 1.1157215833452826e-11
+bleu-4: 6.674094718242315e-13
+
+8
+gen: The New York State Theater at Lincoln Center where Mr Kochs 100 million gift to the New York State Theater in 2008 was a home for New York City Ballet and American Ballet Theater
+ref: Mr Koch donated 100 million toward the renovation of what was then known as the New York State Theater at Lincoln Center and it was renamed in his honor
+bleu-1: 0.41176470587024233
+bleu-2: 0.3159457973681714
+bleu-3: 0.2655066965652975
+bleu-4: 0.23440058275332523
+
+9
+gen: A class at the New York City building of Dr Leslie Bottrell who has a studio in the building
+ref: A resident listens to the Headspace app in the meditation room at the Pierrepont in Brooklyn Heights
+bleu-1: 0.2631578947229917
+bleu-2: 0.1709963920049426
+bleu-3: 1.198142087875271e-06
+bleu-4: 3.2199657145442074e-09
+
+{0: {'bleu-1': 31.578947366759007, 'bleu-2': 13.245323569933959, 'bleu-3': 0.00010105521745868429, 'bleu-4': 2.833929617442683e-07}, 1: {'bleu-1': 30.769230766863913, 'bleu-2': 22.645540681077378, 'bleu-3': 16.705426494779278, 'bleu-4': 0.0026130226594483132}, 2: {'bleu-1': 22.019069252835934, 'bleu-2': 20.152042218906928, 'bleu-3': 17.962652029124122, 'bleu-4': 16.391390246012364}, 3: {'bleu-1': 16.666666665740745, 'bleu-2': 3.1311214552466806e-07, 'bleu-3': 8.493628895592508e-10, 'bleu-4': 4.49569817535607e-11}, 4: {'bleu-1': 30.769230766863913, 'bleu-2': 22.645540681077378, 'bleu-3': 16.705426494779278, 'bleu-4': 0.0026130226594483132}, 5: {'bleu-1': 11.942188508236248, 'bleu-2': 2.243546559768973e-07, 'bleu-3': 6.085951043748197e-10, 'bleu-4': 3.221308505353116e-11}, 6: {'bleu-1': 12.130613191826555, 'bleu-2': 2.859212949281297e-07, 'bleu-3': 8.526129513336406e-10, 'bleu-4': 4.8139616231018626e-11}, 7: {'bleu-1': 9.999999999000012, 'bleu-2': 3.333333332981484e-07, 'bleu-3': 1.1157215833452825e-09, 'bleu-4': 6.674094718242315e-11}, 8: {'bleu-1': 41.176470587024234, 'bleu-2': 31.594579736817142, 'bleu-3': 26.550669656529752, 'bleu-4': 23.44005827533252}, 9: {'bleu-1': 26.315789472299173, 'bleu-2': 17.09963920049426, 'bleu-3': 0.0001198142087875271, 'bleu-4': 3.2199657145442074e-07}, 10: {'bleu-1': 9.999999999000005, 'bleu-2': 2.2941573384731838e-07, 'bleu-3': 6.63729770955094e-10, 'bleu-4': 3.6214395737988035e-11}, 11: {'bleu-1': 71.4285714081633, 'bleu-2': 59.76143044893356, 'bleu-3': 41.49132665533792, 'bleu-4': 0.006500593258180701}, 12: {'bleu-1': 8.333333333159725, 'bleu-2': 4.210759605243941, 'bleu-3': 3.377958850306401e-05, 'bleu-4': 9.620278342821094e-08}, 13: {'bleu-1': 25.655800478528253, 'bleu-2': 16.064003161943486, 'bleu-3': 9.677664494267072, 'bleu-4': 0.0013521543732645353}, 14: {'bleu-1': 28.57142857006803, 'bleu-2': 16.903085093745304, 'bleu-3': 11.456697640101964, 'bleu-4': 0.0017001078097529506}, 'loss': 3.8027814626693726}
