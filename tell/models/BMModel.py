@@ -112,7 +112,7 @@ class BMModel(Model):
         hiddens = self.roberta.extract_features(context["roberta"]).detach()
         # using only first and last hidden because size can change
         # h = torch.cat([hiddens[:,0,:], hiddens[:,-1,:]], dim=-1)
-        h = torch.sum(hiddens, dim=1)
+        h = torch.mean(hiddens, dim=1)
         text_vec = self.relu(self.linear(h))
 
         # TODO: use tensors and correct code
