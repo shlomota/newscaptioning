@@ -224,6 +224,9 @@ class BM2Reader(DatasetReader):
                 [TextField(caption_tokens, self._token_indexers)])
             name_field = stub_field.empty_field()
 
+        print("asdf")
+        print([TextField(p, self._token_indexers) for p in context_tokens])
+
         fields = {
             #'context': TextField(context_tokens, self._token_indexers),
             'context': ListTextField([TextField(p, self._token_indexers) for p in context_tokens]),
