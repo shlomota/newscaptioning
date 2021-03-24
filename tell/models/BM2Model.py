@@ -95,24 +95,25 @@ class BM2Model(Model):
 
         #TODO: understand shape of context, what is roberta/roberta_copy_masks, why are labels identical (perhaps because there's only one example?)
         #todo: make text not go through roberta before
-        # print("context: ", context)
-        # print("image: ", image)
-        # print("face_embeds: ", face_embeds)
-        # print("obj_embeds: ", obj_embeds)
-        # print("names: ", names)
-        # print("labels: ", label)
+        print("context: ", context)
+        print("image: ", image.shape)
+        print("face_embeds: ", face_embeds.shape)
+        print("obj_embeds: ", obj_embeds.shape)
+        print("names: ", names)
+        print("labels: ", label)
 
         # split_context = split_list(context["roberta"], "BLABLA")
         # assert len(split_context) == len(labels)
 
         # stage 1: use only resnet of image and roberta of text (and linear layers)
-        text = context["roberta"]
         im = self.resnet(image).detach()
         im_vec = self.relu(self.conv(im).squeeze())
-        hiddens = self.roberta.extract_features(context["roberta"]).detach()
-        #using only first and last hidden because size can change
-        h = torch.cat([hiddens[:,0,:], hiddens[:,-1,:]], dim=-1)
-        text_vec = self.relu(self.linear(h))
+
+        for pcontext in context:
+            hiddens = self.roberta.extract_features(pcontext).detach()
+            #using only first and last hidden because size can change
+            h = torch.cat([hiddens[:,0,:], hiddens[:,-1,:]], dim=-1)
+            text_vec = self.relu(self.linear(h))
 
         # ctx = [self.roberta(p) for p in context]
         #TODO: use tensors and correct code
