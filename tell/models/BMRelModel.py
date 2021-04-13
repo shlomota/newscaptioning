@@ -6,6 +6,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 from allennlp.data.vocabulary import Vocabulary
 from allennlp.nn.initializers import InitializerApplicator
+import numpy as np
 
 import copy
 import math
@@ -113,6 +114,7 @@ class BMRelModel(Model):
 
         im_vec = F.relu(conv)  # [ 512 ]
         c = context['roberta']  # [B, K, N]
+        mask = context["roberta_copy_masks"]  # [B, K, N]
         hiddens = torch.stack([self.roberta.extract_features(p).detach() for p in c])  # [B, K, N, 1024]
         # cshape = c.shape
         # c = c.view(cshape[0] * cshape[1], -1)  # [BK, N]
@@ -123,7 +125,9 @@ class BMRelModel(Model):
         raise Exception("whatever")'''
 
         # TODO: check if we want to address sentence length and calculate mean w.r.t that
-        h = torch.mean(hiddens, dim=2)  # [B, K, 1024]
+        # h = torch.mean(hiddens, dim=2)  # [B, K, 1024]
+        sums = torch.sum(hiddens, dim=2)
+        h = sums / np.tile(np.argmin(mask, axis=-1)[:, :, np.newaxis], sums.shape[-1])
         # nan -> 0 before passing through layers, then we mask these paragraphs out anyway
         # h = torch.nan_to_num(h) # doesn't exist in torch 1.5.1
         h[torch.isnan(h)] = 0
