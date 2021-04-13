@@ -34,8 +34,8 @@ def split_list(li, val):
     return result
 
 
-@Model.register("BM2Model")
-class BM2Model(Model):
+@Model.register("BMRelModel")
+class BMRelModel(Model):
     def __init__(self,
                  vocab: Vocabulary,
                  criterion: Criterion,
@@ -55,7 +55,7 @@ class BM2Model(Model):
                  initializer: InitializerApplicator = InitializerApplicator()) -> None:
         super().__init__(vocab)
         # self.criterion = criterion
-        self.criterion = nn.KLDivLoss()
+        self.criterion = nn.BCELoss()
 
         self.index = index
         self.namespace = namespace
@@ -104,20 +104,19 @@ class BM2Model(Model):
         else:
             conv = conv.squeeze()
 
-        mask = context['roberta_copy_masks']  # [B,K,N]
-        B, N = mask.shape[0], mask.shape[2]
-        print("B", B)
-        v = torch.zeros((N, 1), dtype=int)  # [N,1]
-        v[0] = 1  # [ 1, 0, ... 0 ]
-        v = v.expand((B, N, 1))  # [B,N,1]
-        mask = torch.bmm(mask, v).squeeze(-1).bool()  # [B,K]
+        # mask = context['roberta_copy_masks']  # [B,K,N]
+        # B, N = mask.shape[0], mask.shape[2]
+        # v = torch.zeros((N, 1), dtype=int)  # [N,1]
+        # v[0] = 1  # [ 1, 0, ... 0 ]
+        # v = v.expand((B, N, 1))  # [B,N,1]
+        # mask = torch.bmm(mask, v).squeeze(-1).bool()  # [B,K]
 
         im_vec = F.relu(conv)  # [ 512 ]
         c = context['roberta']  # [B, K, N]
         hiddens = torch.stack([self.roberta.extract_features(p).detach() for p in c])  # [B, K, N, 1024]
-        #cshape = c.shape
-        #c = c.view(cshape[0] * cshape[1], -1)  # [BK, N]
-        #hiddens = self.roberta.extract_features(c).detach().view(cshape+(1024,))  # [B, K, N, 1024]
+        # cshape = c.shape
+        # c = c.view(cshape[0] * cshape[1], -1)  # [BK, N]
+        # hiddens = self.roberta.extract_features(c).detach().view(cshape+(1024,))  # [B, K, N, 1024]
         '''torch.save(c, '/a/home/cc/students/cs/shlomotannor/nlp_course/newscaptioning/c.pt')
         torch.save(hiddens, '/a/home/cc/students/cs/shlomotannor/nlp_course/newscaptioning/h.pt')
         torch.save(mask, '/a/home/cc/students/cs/shlomotannor/nlp_course/newscaptioning/mask.pt')
@@ -130,34 +129,21 @@ class BM2Model(Model):
         h[torch.isnan(h)] = 0
         text_vec = F.relu(self.linear(h))  # [B, K, 512]
         score = torch.bmm(text_vec, im_vec.unsqueeze(-1)).squeeze(-1)  # [B, K, 512] bmm [B, 512, 1] . s = [B,K]
+        single_value_score = torch.softmax(score, dim=1)[:, 1]
 
-
-
-        print("shapes", score.shape, mask.shape)
-        # torch.save(mask, '/a/home/cc/students/cs/shlomotannor/nlp_course/newscaptioning/mask.pt')
-        # torch.save(score, '/a/home/cc/students/cs/shlomotannor/nlp_course/newscaptioning/score.pt')
-
-        score[mask] = -float("inf")
-
-        score = F.log_softmax(score)
-
-        loss = self.criterion(score, label)
+        loss = self.criterion(single_value_score, label)
 
         output_dict = {
             'loss': loss,
             # 'probs': score
         }
 
-        # During evaluation...
-        # if not self.training and self.evaluate_mode:
-        #    pass
-
         self.n_batches += 1
 
         strloss = f'{self.n_batches}:{loss}'
         print(strloss)
 
-        open('/a/home/cc/students/cs/shlomotannor/nlp_course/newscaptioning/BMM.log', 'a').write(strloss + '\n')
+        open('/a/home/cc/students/cs/shlomotannor/nlp_course/newscaptioning/BMRel.log', 'a').write(strloss + '\n')
 
         # raise Exception("bla")
 
