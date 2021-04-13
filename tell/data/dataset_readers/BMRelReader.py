@@ -226,9 +226,10 @@ class BMRelReader(DatasetReader):
             # 'context': ListTextField(context_tokens),
             'names': ListTextField(name_field),
             'image': ImageField(image, self.preprocess),
+
             'caption': TextField(caption_tokens, self._token_indexers),
             'face_embeds': ArrayField(face_embeds, padding_value=np.nan),
-            'label': LabelField(relative_score)
+            'label': LabelField(relative_score, skip_indexing=True)
         }
 
         if obj_feats is not None:
