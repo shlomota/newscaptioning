@@ -10,4 +10,5 @@ class ListTextField(ListField):
         padding_lengths = super().get_padding_lengths()
         padding_lengths['total_num_tokens'] = padding_lengths['num_fields'] * \
             padding_lengths['list_num_tokens']
+
         return padding_lengths

@@ -93,22 +93,18 @@ class BM2Reader(DatasetReader):
         logger.info('Grabbing all article IDs')
 
         #TODO: restore this
-        # sample_cursor = self.db.articles.find({
-        #     'split': split,
-        # }, projection=['_id']).sort('_id', pymongo.ASCENDING)
-        # ids = np.array([article['_id'] for article in tqdm(sample_cursor)])
-        # sample_cursor.close()
-        # self.rs.shuffle(ids)
+        sample_cursor = self.db.articles.find({
+            'split': split,
+        }, projection=['_id']).sort('_id', pymongo.ASCENDING)
+        ids = np.array([article['_id'] for article in tqdm(sample_cursor)])
+        sample_cursor.close()
+        self.rs.shuffle(ids)
 
         # TODO: just for debug
-        article = self.db.articles.find_one({
+        '''article = self.db.articles.find_one({
             'split': split,
         }, projection=['_id'])
-        ids = np.array([article['_id']])
-
-
-
-
+        ids = np.array([article['_id']])'''
 
         projection = ['_id', 'parsed_section.type', 'parsed_section.text',
                       'parsed_section.hash', 'parsed_section.parts_of_speech',
@@ -124,13 +120,19 @@ class BM2Reader(DatasetReader):
         for article_id in ids[:self.articles_num]:
             article = self.db.articles.find_one(
                 {'_id': {'$eq': article_id}}, projection=projection)
+
+            image_positions = article['image_positions']
+
             sections = article['parsed_section']
 
             paragraphs = []
             named_entities = set()
 
-
             paragraphs = [p for p in sections if p['type'] == 'paragraph']
+
+            if not len(paragraphs):
+                continue
+
             paragraphs_texts = [p["text"] for p in paragraphs]
 
             for p in paragraphs:
@@ -140,8 +142,6 @@ class BM2Reader(DatasetReader):
             tokenized_corpus = [doc.split(" ") for doc in paragraphs_texts]
             bm25 = BM25Okapi(tokenized_corpus)
 
-
-            image_positions = article['image_positions']
             for pos in image_positions:
                 caption = sections[pos]['text'].strip()
                 if not caption:
@@ -152,10 +152,9 @@ class BM2Reader(DatasetReader):
                 tokenized_query = query.split(" ")
                 paragraphs_scores = bm25.get_scores(tokenized_query)
 
-                # apply softmax
-                #TODO: restore?
+                # apply softmax (done in model)
                 paragraphs_scores = np.exp(paragraphs_scores)
-                paragraphs_scores = paragraphs_scores / paragraphs_scores.sum(0)
+                paragraphs_scores /= paragraphs_scores.sum(0)
 
 
                 image_id = f'{article_id}_{pos}'
@@ -200,13 +199,13 @@ class BM2Reader(DatasetReader):
                         article['web_url'], pos, face_embeds, obj_feats, image_id)'''
                 yield self.article_to_instance(
                      paragraphs, paragraphs_scores, named_entities, image, caption, image_path,
-                     article['web_url'], pos, face_embeds, obj_feats, image_id)
+                     article['web_url'], pos, face_embeds, obj_feats, image_id, article_id)
 
     # def article_to_instance(self, paragraphs, paragraphs_scores, named_entities, image, caption,
     #                         image_path, web_url, pos, face_embeds, obj_feats, image_id) -> Instance:
 
     def article_to_instance(self, paragraphs, paragraphs_scores, named_entities, image, caption,
-                            image_path, web_url, pos, face_embeds, obj_feats, image_id) -> Instance:
+                            image_path, web_url, pos, face_embeds, obj_feats, image_id, article_id) -> Instance:
         # context = ' BLABLA '.join([p["text"] for p in paragraphs]).strip()
         context = paragraphs
 
@@ -224,8 +223,8 @@ class BM2Reader(DatasetReader):
                 [TextField(caption_tokens, self._token_indexers)])
             name_field = stub_field.empty_field()
 
-        print("asdf")
-        print([TextField(p, self._token_indexers) for p in context_tokens])
+        #print([TextField(p, self._token_indexers) for p in context_tokens])
+        #print(ListTextField([TextField(p, self._token_indexers) for p in context_tokens]))
 
         fields = {
             #'context': TextField(context_tokens, self._token_indexers),
@@ -241,13 +240,15 @@ class BM2Reader(DatasetReader):
         if obj_feats is not None:
             fields['obj_embeds'] = ArrayField(obj_feats, padding_value=np.nan)
 
-        metadata = {'context': context,
+        '''metadata = {'context': context,
                     'caption': caption,
                     'names': named_entities,
                     'web_url': web_url,
                     'image_path': image_path,
                     'image_pos': pos,
-                    'image_id': image_id,}
+                    'image_id': image_id,
+                    'article_id': article_id}'''
+        metadata = {}
         fields['metadata'] = MetadataField(metadata)
 
         return Instance(fields)

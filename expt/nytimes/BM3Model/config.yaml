@@ -61,3 +61,6 @@ validation_iterator:
 trainer:
   optimizer: adam
   num_epochs: 1
+vocabulary:
+  type: roberta
+  directory_path: ./expt/vocabulary
