@@ -129,7 +129,7 @@ class BMRelReader(DatasetReader):
 
             paragraphs = [p for p in sections if p['type'] == 'paragraph']
 
-            if not len(paragraphs):
+            if not len(paragraphs) or len(paragraphs) < 2:
                 continue
 
             paragraphs_texts = [p["text"] for p in paragraphs]
