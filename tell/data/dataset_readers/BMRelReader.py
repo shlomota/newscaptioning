@@ -229,7 +229,7 @@ class BMRelReader(DatasetReader):
 
             'caption': TextField(caption_tokens, self._token_indexers),
             'face_embeds': ArrayField(face_embeds, padding_value=np.nan),
-            'label': LabelField(relative_score, skip_indexing=True)
+            'label': LabelField(int(relative_score), skip_indexing=True)
         }
 
         if obj_feats is not None:

@@ -134,6 +134,8 @@ class BMRelModel(Model):
         loss = self.criterion(single_value_score, label)
 
         output_dict = {
+            'score0': score[:, 0],
+            'score1': score[:, 1],
             'loss': loss,
             # 'probs': score
         }
