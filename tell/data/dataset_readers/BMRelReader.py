@@ -153,6 +153,7 @@ class BMRelReader(DatasetReader):
 
                 # TODO: select random two paragraphs
                 i1, i2 = np.random.choice(range(len(paragraphs_scores)), size=2, replace=False)
+                current_paragraphs = [paragraphs[i1], paragraphs[i2]]
                 relative_score = 1 * (paragraphs_scores[i2] > paragraphs_scores[i1])
 
                 image_id = f'{article_id}_{pos}'
@@ -196,7 +197,7 @@ class BMRelReader(DatasetReader):
                         paragraphs_texts[i],paragraphs_scores[i], named_entities, image, caption, image_path,
                         article['web_url'], pos, face_embeds, obj_feats, image_id)'''
                 yield self.article_to_instance(
-                    paragraphs, relative_score, named_entities, image, caption, image_path,
+                    current_paragraphs, relative_score, named_entities, image, caption, image_path,
                     article['web_url'], pos, face_embeds, obj_feats, image_id, article_id)
 
     def article_to_instance(self, paragraphs, relative_score, named_entities, image, caption,

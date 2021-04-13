@@ -24,7 +24,7 @@ vocabulary:
   type: roberta
   directory_path: ./expt/vocabulary
 model:
-  type: BM2Model
+  type: BMRelModel
   criterion:
     type: adaptive_loss
     padding_idx: 1
