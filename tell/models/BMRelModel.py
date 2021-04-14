@@ -125,9 +125,9 @@ class BMRelModel(Model):
         raise Exception("whatever")'''
 
         # TODO: check if we want to address sentence length and calculate mean w.r.t that
-        # h = torch.mean(hiddens, dim=2)  # [B, K, 1024]
-        sums = torch.sum(hiddens, dim=2)
-        h = sums / np.tile(np.argmin(mask, axis=-1)[:, :, np.newaxis], sums.shape[-1]).astype(np.float32)
+        h = torch.mean(hiddens, dim=2)  # [B, K, 1024]
+        # sums = torch.sum(hiddens, dim=2)
+        # h = sums / np.tile(np.argmin(mask, axis=-1)[:, :, np.newaxis], sums.shape[-1]).astype(np.float32)
         h[torch.isnan(h)] = 0
         h[torch.isinf(h)] = 1e15
         # nan -> 0 before passing through layers, then we mask these paragraphs out anyway

@@ -107,9 +107,9 @@ class BMModel(Model):
 
         hiddens = self.roberta.extract_features(context["roberta"]).detach()
         mask = context["roberta_copy_masks"]  # [B, N]
-        # h = torch.mean(hiddens, dim=1)
-        sums = torch.sum(hiddens, dim=1)
-        h = sums / np.tile(np.argmin(mask, axis=-1)[:, np.newaxis], sums.shape[-1]).astype(np.float32)
+        h = torch.mean(hiddens, dim=1)
+        # sums = torch.sum(hiddens, dim=1)
+        # h = sums / np.tile(np.argmin(mask, axis=-1)[:, np.newaxis], sums.shape[-1]).astype(np.float32)
         h[torch.isnan(h)] = 0
         h[torch.isinf(h)] = 1e15
         text_vec = self.relu(self.linear(h))
