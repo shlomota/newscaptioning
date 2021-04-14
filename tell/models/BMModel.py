@@ -109,7 +109,7 @@ class BMModel(Model):
         mask = context["roberta_copy_masks"]  # [B, N]
         # h = torch.mean(hiddens, dim=1)
         sums = torch.sum(hiddens, dim=1)
-        h = sums / np.argmin(mask, axis=-1).astype(np.float32)
+        h = sums / np.argmin(mask, axis=-1).float()
         h[torch.isnan(h)] = 0
         h[torch.isinf(h)] = 1e15
         text_vec = self.relu(self.linear(h))
