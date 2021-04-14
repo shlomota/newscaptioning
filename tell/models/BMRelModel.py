@@ -135,7 +135,7 @@ class BMRelModel(Model):
         score = torch.bmm(text_vec, im_vec.unsqueeze(-1)).squeeze(-1)  # [B, K, 512] bmm [B, 512, 1] . s = [B,K]
         single_value_score = torch.softmax(score, dim=1)[:, 1]
 
-        loss = self.criterion(single_value_score, label)
+        loss = self.criterion(single_value_score, label.float())
 
         output_dict = {
             'score0': score[:, 0],
