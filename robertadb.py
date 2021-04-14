@@ -23,8 +23,25 @@ client = pymongo.MongoClient(host='nova', port=27017)
 db = client.nytimes
 
 split = 'train'
-if len(sys.argv) > 1:
-    split = sys.argv[1]
+reverse = False
+full_search = False
+rand = False
+
+if 'train' in sys.argv:
+    split = 'train'
+
+if 'test' in sys.argv:
+    split = 'test'
+
+if 'r' in sys.argv:
+    reverse = True
+
+if 'fs' in sys.argv:
+    full_search = True
+
+if 'rand' in sys.argv:
+    rand = True
+    full_search = True
 
 if split not in ['train', 'test']:
     raise Exception('w0t?')
@@ -44,6 +61,12 @@ roberta.eval()
 
 ids = np.load(base_path+'_ids.npy')
 
+if reverse:
+    ids = ids[::-1]
+
+if rand:
+    np.random.shuffle(ids)
+
 #['_id', 'web_url', 'snippet', 'lead_paragraph', 'abstract', 'print_page', 'blog', 'source', 'multimedia', 'headline', \
 # 'keywords', 'pub_date', 'document_type', 'news_desk', 'section_name', 'subsection_name', 'byline',\
 # 'type_of_material', 'word_count', 'slideshow_credits', 'scraped', 'parsed', 'error', 'image_positions',\
@@ -55,12 +78,17 @@ sfrom = True
 l = [os.path.basename(id) for id in glob(base_path+"*")]
 
 for aid in tqdm(ids):
-    if sfrom:
+    if full_search:
+        l = [os.path.basename(id) for id in glob(base_path + "*[!m]")]
         if aid in l:
             continue
-        else:
-            sfrom = False
-            del l
+    else:
+        if sfrom:
+            if aid in l:
+                continue
+            else:
+                sfrom = False
+                del l
 
     a = db.articles.find_one({'_id': {'$eq': aid}}, projection=projection)
     sections = a['parsed_section']
@@ -69,7 +97,7 @@ for aid in tqdm(ids):
     context = ListTextField([TextField(p, token_indexer) for p in tokens])
     context.index(vocab)
     context = context.as_tensor(context.get_padding_lengths())
-
+    print(aid, context['roberta'].shape)
     r = roberta.extract_features(context['roberta']).detach()
 
     torch.save(r, base_path+aid)

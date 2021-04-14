@@ -192,7 +192,7 @@ class BMReader(DatasetReader):
 
                 for i, _ in enumerate(paragraphs):
                     yield self.article_to_instance(
-                        paragraphs_texts[i],paragraphs_scores[i], named_entities, image, caption, image_path,
+                        paragraphs_texts[i], paragraphs_scores[i], named_entities, image, caption, image_path,
                         article['web_url'], pos, face_embeds, obj_feats, image_id)
                 # yield self.article_to_instance(
                 #         paragraphs,paragraphs_scores, named_entities, image, caption, image_path,
