@@ -131,6 +131,7 @@ class BMRelModel(Model):
         # nan -> 0 before passing through layers, then we mask these paragraphs out anyway
         # h = torch.nan_to_num(h) # doesn't exist in torch 1.5.1
         h[torch.isnan(h)] = 0
+        h[torch.isinf(h)] = 1e15
         text_vec = F.relu(self.linear(h))  # [B, K, 512]
         score = torch.bmm(text_vec, im_vec.unsqueeze(-1)).squeeze(-1)  # [B, K, 512] bmm [B, 512, 1] . s = [B,K]
         single_value_score = torch.softmax(score, dim=1)[:, 1]
