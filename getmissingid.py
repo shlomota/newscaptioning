@@ -17,6 +17,8 @@ ids = ids[~np.isin(ids, l)] #remove l from ids
 np.save("dbr/_ids_missing.npy", ids)
 
 n = len(ids)
-agents = np.arange(math.ceil(n/agent_jobs))
+agents_needed = math.ceil(n/agent_jobs)
+print(f"{n} left for {agents_needed} agents with {agent_jobs} each")
+agents = np.arange(agents_needed)
 np.save("dbr/_agents.npy", agents)
 

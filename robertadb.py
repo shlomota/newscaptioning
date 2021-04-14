@@ -122,7 +122,8 @@ def main():
     sfrom = True
     l = [os.path.basename(i) for i in glob(base_path+"*")]
 
-    for aid in tqdm(ids):
+    #for aid in tqdm(ids):
+    for aid in ids:
         if not agent:
             if full_search:
                 l = [os.path.basename(id) for id in glob(base_path + "*[!m]")]
