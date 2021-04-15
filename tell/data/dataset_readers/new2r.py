@@ -232,7 +232,7 @@ class NewReader2R(DatasetReader):
 
                 # todo: restore
                 paragraphs_texts = [p["text"] for p in paragraphs]
-                tokened = [self._tokenizer.tokenize(1]
+                tokened = [self._tokenizer.tokenize(paragraphs_texts[0])]
                 test_field = TextField(tokened, self._token_indexers)
                 tokenized_corpus = [doc.split(" ") for doc in paragraphs_texts]
 
