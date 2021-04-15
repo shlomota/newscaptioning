@@ -107,7 +107,8 @@ iterator:
       - num_tokens
     - - caption
       - num_tokens
-  batch_size: 16
+  #  batch_size: 16
+  batch_size: 8
   max_instances_in_memory: 8192
   biggest_batch_first: false
   instances_per_epoch: 256
