@@ -56,6 +56,7 @@ validation_iterator:
       - num_tokens
   batch_size: 16
   max_instances_in_memory: 8192
+  instances_per_epoch: 256
   maximum_samples_per_batch: [ "num_tokens", 16384 ]
   biggest_batch_first: false
 trainer:
