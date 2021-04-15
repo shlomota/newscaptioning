@@ -67,11 +67,11 @@ if reverse:
 projection = ['_id', 'parsed_section']
 
 sfrom = True
-l = [os.path.basename(id) for id in glob(base_path+"*")]
+l = [os.path.basename(id) for id in glob(base_path+"*m")]
 
 for aid in tqdm(ids):
     if full_search:
-        l = [os.path.basename(id) for id in glob(base_path + "*")]
+        l = [os.path.basename(id) for id in glob(base_path + "*m")]
         if aid in l:
             continue
     else:
