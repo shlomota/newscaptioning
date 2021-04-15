@@ -85,8 +85,6 @@ def main():
     if split == 'test':
         base_path += 'test/'
 
-    articles = db.articles.find({'split': split}, projection=['_id']).sort('_id', pymongo.ASCENDING)
-
     tokenizer = Tokenizer.from_params(config.get('dataset_reader').get('tokenizer'))
     indexer_params = config.get('dataset_reader').get('token_indexers')
     token_indexer = {k: TokenIndexer.from_params(p) for k, p in indexer_params.items()}
@@ -147,8 +145,6 @@ def main():
         r = roberta.extract_features(context['roberta']).detach()
 
         torch.save(r, base_path+aid)
-
-    articles.close()
 
 if __name__ == '__main__':
     main()
