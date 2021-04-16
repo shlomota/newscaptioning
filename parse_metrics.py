@@ -1,12 +1,19 @@
+import sys
 import os
 import matplotlib.pyplot as plt
 import glob
 import json
 import pandas as pd
 
-BASE_PATH = "/a/home/cc/students/cs/shlomotannor/nlp_course/newscaptioning/"
-SERIALIZATION_DIR = os.path.join(BASE_PATH, "expt/nytimes/BM/serialization_40_256/")
+BASE_PATH = "/a/home/cc/students/cs/shlomotannor/nlp_course/newscaptioning/expt/nytimes"
+DIR = "BM/serialization_40_256/"
 
+if len(sys.argv) > 1:
+    DIR = sys.argv[1]
+
+SERIALIZATION_DIR = os.path.join(BASE_PATH, DIR)
+if not os.path.exists(SERIALIZATION_DIR):
+    raise Exception("yo wut?")
 
 # SERIALIZATION_DIR = os.path.join(BASE_PATH, "expt/nytimes/BMRel/serialization_mean/")
 
@@ -27,9 +34,16 @@ for file in sorted_files:
     training_loss.append(data["training_loss"])
     validation_loss.append(data["validation_loss"])
 
-plt.plot(range(len(sorted_files)), training_loss, label="train")
-plt.plot(range(len(sorted_files)), validation_loss, label="validation")
-plt.legend()
-plt.xlabel("epoch")
-plt.ylabel("Loss")
-plt.show()
+if not 'noplot' in sys.argv:
+    plt.plot(range(len(sorted_files)), training_loss, label="train")
+    plt.plot(range(len(sorted_files)), validation_loss, label="validation")
+    plt.legend()
+    plt.xlabel("epoch")
+    plt.ylabel("Loss")
+    plt.savefig(os.path.join(SERIALIZATION_DIR, "fig.png"))
+    plt.show()
+else:
+    print(len(sorted_files))
+    print(training_loss)
+    print(validation_loss)
+    

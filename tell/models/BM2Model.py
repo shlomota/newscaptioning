@@ -52,6 +52,7 @@ class BM2Model(Model):
                  sampling_topk: int = 1,
                  sampling_temp: float = 1.0,
                  weigh_bert: bool = False,
+                 arch: int=0,
                  initializer: InitializerApplicator = InitializerApplicator()) -> None:
         super().__init__(vocab)
         # self.criterion = criterion
@@ -73,8 +74,15 @@ class BM2Model(Model):
         self.loss_func = nn.MSELoss()
 
         self.conv = nn.Conv2d(2048, 512, 7)
-        self.linear = nn.Linear(1024, 512)
-        self.relu = nn.ReLU()
+
+        self.arch = arch
+
+        if self.arch in [0]:
+            self.linear = nn.Linear(1024, 512)
+        else:
+            self.linear = nn.Linear(1024, 768)
+            self.linear2 = nn.Linear(768, 512)
+
         if weigh_bert:
             self.bert_weight = nn.Parameter(torch.Tensor(25))
             nn.init.uniform_(self.bert_weight)
@@ -91,10 +99,6 @@ class BM2Model(Model):
             self.test = "test/"
 
         initializer(self)
-
-    def aid_to_roberta(self, aid):
-        aid = hex(aid)
-        self.dbr
 
     def forward(self,  # type: ignore
                 aid: List[Dict[str, Any]],
@@ -126,7 +130,10 @@ class BM2Model(Model):
         v = v.expand((B, N, 1))  # [B,N,1]
         mask = torch.bmm(mask, v).squeeze(-1).bool()  # [B,K]'''
 
-        im_vec = F.relu(conv)  # [ 512 ]
+        if arch in [2]:
+            im_vec = conv  # [ 512 ]
+        else:
+            im_vec = F.relu(conv)  # [ 512 ]
 
         # c = context['roberta']  # [B, K, N]
         # hiddens = torch.stack([self.roberta.extract_features(p).detach() for p in c])  # [B, K, N, 1024]
@@ -138,8 +145,6 @@ class BM2Model(Model):
 
         c = [torch.mean(c*m[ci], dim=1) for ci, c in enumerate(c)]
         c = torch.nn.utils.rnn.pad_sequence(c, batch_first=True)  # [B, N, 1024]
-
-        print(c.shape)
 
         # cshape = c.shape
         # c = c.view(cshape[0] * cshape[1], -1)  # [BK, N]
@@ -154,7 +159,17 @@ class BM2Model(Model):
         # nan -> 0 before passing through layers, then we mask these paragraphs out anyway
         # h = torch.nan_to_num(h) # doesn't exist in torch 1.5.1
         #h[torch.isnan(h)] = 0
-        text_vec = F.relu(self.linear(c))  # [B, N, 512]
+
+        text_vec = F.relu(self.linear(c))
+
+        if arch in [1, 2]:
+            text_vec = self.linear2(text_vec)
+
+        if arch in [1]:
+            text_vec = F.relu(text_vec)
+
+        # text_vec [B, N, 512]
+
         score = torch.bmm(text_vec, im_vec.unsqueeze(-1)).squeeze(-1)  # [B, N, 512] bmm [B, 512, 1] . s = [B,N]
 
         # torch.save(mask, '/a/home/cc/students/cs/shlomotannor/nlp_course/newscaptioning/mask.pt')
@@ -178,7 +193,7 @@ class BM2Model(Model):
         strloss = f'{self.n_batches}:{loss}'
         print(strloss)
 
-        open('/a/home/cc/students/cs/shlomotannor/nlp_course/newscaptioning/BMM.log', 'a').write(strloss + '\n')
+        #open('/a/home/cc/students/cs/shlomotannor/nlp_course/newscaptioning/BMM.log', 'a').write(strloss + '\n')
 
         # raise Exception("bla")
 
