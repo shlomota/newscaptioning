@@ -3,6 +3,8 @@ import os
 import random
 import re
 from typing import Dict, List
+from time import sleep
+import math
 
 import numpy as np
 import pymongo
@@ -92,13 +94,29 @@ class BM2Reader(DatasetReader):
 
         logger.info('Grabbing all article IDs')
 
-        #TODO: restore this
-        sample_cursor = self.db.articles.find({
+        '''sample_cursor = self.db.articles.find({
             'split': split,
         }, projection=['_id']).sort('_id', pymongo.ASCENDING)
         ids = np.array([article['_id'] for article in tqdm(sample_cursor)])
-        sample_cursor.close()
+        sample_cursor.close()'''
+
+        #load npy ids
+        base = "/specific/netapp5/joberant/nlp_fall_2021/shlomotannor/newscaptioning/"
+        if split == 'test':
+            test = 'test'
+        else:
+            test = ''
+
+        ids = np.array([])
+        while not len(ids):  # is someone else reading/writing ? Wait a bit...
+            try:
+                ids = np.load(f"{base}_ids{test}.npy")
+
+            except Exception:
+                time.sleep(1)
+
         self.rs.shuffle(ids)
+        print(f"found {len(ids)} article ids")
 
         # TODO: just for debug
         '''article = self.db.articles.find_one({
@@ -125,7 +143,6 @@ class BM2Reader(DatasetReader):
 
             sections = article['parsed_section']
 
-            paragraphs = []
             named_entities = set()
 
             paragraphs = [p for p in sections if p['type'] == 'paragraph']
@@ -135,9 +152,9 @@ class BM2Reader(DatasetReader):
 
             paragraphs_texts = [p["text"] for p in paragraphs]
 
-            for p in paragraphs:
+            '''for p in paragraphs:
                 named_entities |= self._get_named_entities(p)
-            named_entities = sorted(named_entities)
+            named_entities = sorted(named_entities)'''
 
             tokenized_corpus = [doc.split(" ") for doc in paragraphs_texts]
             bm25 = BM25Okapi(tokenized_corpus)
@@ -173,14 +190,18 @@ class BM2Reader(DatasetReader):
                 except (FileNotFoundError, OSError):
                     continue
 
+                face_embeds = np.array([[]])
+
+                '''
                 if 'facenet_details' not in sections[pos] or n_persons == 0:
                     face_embeds = np.array([[]])
                 else:
                     face_embeds = sections[pos]['facenet_details']['embeddings']
                     # Keep only the top faces (sorted by size)
-                    face_embeds = np.array(face_embeds[:n_persons])
+                    face_embeds = np.array(face_embeds[:n_persons])'''
 
                 obj_feats = None
+                '''
                 if self.use_objects:
                     obj = self.db.objects.find_one(
                         {'_id': sections[pos]['hash']})
@@ -191,29 +212,27 @@ class BM2Reader(DatasetReader):
                         else:
                             obj_feats = np.array(obj_feats)
                     else:
-                        obj_feats = np.array([[]])
+                        obj_feats = np.array([[]])'''
 
                 '''for i, _ in enumerate(paragraphs):
                     yield self.article_to_instance(
                         paragraphs_texts[i],paragraphs_scores[i], named_entities, image, caption, image_path,
                         article['web_url'], pos, face_embeds, obj_feats, image_id)'''
                 yield self.article_to_instance(
-                     paragraphs, paragraphs_scores, named_entities, image, caption, image_path,
+                     article_id, paragraphs_scores, named_entities, image, caption, image_path,
                      article['web_url'], pos, face_embeds, obj_feats, image_id, article_id)
 
     # def article_to_instance(self, paragraphs, paragraphs_scores, named_entities, image, caption,
     #                         image_path, web_url, pos, face_embeds, obj_feats, image_id) -> Instance:
 
-    def article_to_instance(self, paragraphs, paragraphs_scores, named_entities, image, caption,
+    def article_to_instance(self, aid, paragraphs_scores, named_entities, image, caption,
                             image_path, web_url, pos, face_embeds, obj_feats, image_id, article_id) -> Instance:
-        # context = ' BLABLA '.join([p["text"] for p in paragraphs]).strip()
-        context = paragraphs
+        #context = paragraphs
 
-        # context_tokens = [self._tokenizer.tokenize(p["text"]) for p in paragraphs]
-        # context_tokens = [self._tokenizer.tokenize(p["text"]) for p in paragraphs]
-        context_tokens = [self._tokenizer.tokenize(c['text']) for c in context]
+        # context_tokens = [self._tokenizer.tokenize(c['text']) for c in context]
+
         caption_tokens = self._tokenizer.tokenize(caption)
-        name_token_list = [self._tokenizer.tokenize(n) for n in named_entities]
+        '''name_token_list = [self._tokenizer.tokenize(n) for n in named_entities]
 
         if name_token_list:
             name_field = [TextField(tokens, self._token_indexers)
@@ -221,24 +240,26 @@ class BM2Reader(DatasetReader):
         else:
             stub_field = ListTextField(
                 [TextField(caption_tokens, self._token_indexers)])
-            name_field = stub_field.empty_field()
+            name_field = stub_field.empty_field()'''
 
         #print([TextField(p, self._token_indexers) for p in context_tokens])
         #print(ListTextField([TextField(p, self._token_indexers) for p in context_tokens]))
 
         fields = {
             #'context': TextField(context_tokens, self._token_indexers),
-            'context': ListTextField([TextField(p, self._token_indexers) for p in context_tokens]),
+            #'context': ListTextField([TextField(p, self._token_indexers) for p in context_tokens]),
             #'context': ListTextField(context_tokens),
-            'names': ListTextField(name_field),
+            #'names': ListTextField(name_field),
+
+            'aid': ArrayField(aid),
             'image': ImageField(image, self.preprocess),
             'caption': TextField(caption_tokens, self._token_indexers),
-            'face_embeds': ArrayField(face_embeds, padding_value=np.nan),
+            #'face_embeds': ArrayField(face_embeds, padding_value=np.nan),
             'label': ArrayField(np.array([paragraphs_scores]))
         }
 
-        if obj_feats is not None:
-            fields['obj_embeds'] = ArrayField(obj_feats, padding_value=np.nan)
+        '''if obj_feats is not None:
+            fields['obj_embeds'] = ArrayField(obj_feats, padding_value=np.nan)'''
 
         '''metadata = {'context': context,
                     'caption': caption,
@@ -248,8 +269,8 @@ class BM2Reader(DatasetReader):
                     'image_pos': pos,
                     'image_id': image_id,
                     'article_id': article_id}'''
-        metadata = {}
-        fields['metadata'] = MetadataField(metadata)
+        aid = {'aid': aid}
+        fields['aid'] = MetadataField(aid)
 
         return Instance(fields)
 

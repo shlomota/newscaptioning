@@ -14,6 +14,7 @@ from allennlp.data.fields import TextField
 from tell.data.fields import ListTextField
 from tell.commands.train import yaml_to_params
 
+
 def main():
     base_path = "/a/home/cc/students/cs/shlomotannor/nlp_course/newscaptioning/dbr/"
     agentsnpy = 'dbr/_agents.npy'
@@ -30,6 +31,7 @@ def main():
     rand = False
     offset = False
     agent = False
+    prints = False
 
     if 'create_agents' in sys.argv:
         free = np.arange(101)
@@ -52,6 +54,9 @@ def main():
         rand = True
         full_search = True
 
+    if 'print' in sys.argv:
+        prints = True
+
     offseti = [i.startswith('offset') for i in sys.argv]
     if True in offseti:
         offseti = offseti.index(True)
@@ -65,6 +70,8 @@ def main():
 
         offseti = int(offseti)
 
+        print('offset', offseti, offsetend)
+
     agenti = [i.startswith('agent') for i in sys.argv]
     if True in agenti:
         agenti = agenti.index(True)
@@ -72,9 +79,12 @@ def main():
         agenti = sys.argv[agenti][len("agent"):]
         if agenti == 'r':
             free = np.load(agentsnpy)
-            agenti = np.random.choice(free)
-            free = free[~np.isin(free, agenti)]
-            np.save(agentsnpy, free)
+            if free:
+                agenti = np.random.choice(free)
+                free = free[~np.isin(free, agenti)]
+                np.save(agentsnpy, free)
+            else:
+                raise Exception("no more free agent indices")
 
         else:
             agenti = int(agenti)
@@ -94,23 +104,23 @@ def main():
     roberta.eval()
 
     if agent:
-        agent_ids = 5000
-        ids = np.load(base_path+'_ids_missing.npy')
-        ids = ids[agenti*agent_ids: (agenti+1)*agent_ids]
+        agent_ids = 3000
+        ids = np.load(base_path + '_ids_missing.npy')
+        ids = ids[agenti * agent_ids: (agenti + 1) * agent_ids]
 
     else:
-        ids = np.load(base_path+'_ids.npy')
+        ids = np.load(base_path + '_ids.npy')
 
-        if reverse:
-            ids = ids[::-1]
+    if reverse:
+        ids = ids[::-1]
 
-        if rand:
-            np.random.shuffle(ids)
+    if rand:
+        np.random.shuffle(ids)
 
-        if offset:
-            ids = ids[offseti:offsetend]
+    if offset:
+        ids = ids[offseti:offsetend]
 
-    #['_id', 'web_url', 'snippet', 'lead_paragraph', 'abstract', 'print_page', 'blog', 'source', 'multimedia', 'headline', \
+    # ['_id', 'web_url', 'snippet', 'lead_paragraph', 'abstract', 'print_page', 'blog', 'source', 'multimedia', 'headline', \
     # 'keywords', 'pub_date', 'document_type', 'news_desk', 'section_name', 'subsection_name', 'byline',\
     # 'type_of_material', 'word_count', 'slideshow_credits', 'scraped', 'parsed', 'error', 'image_positions',\
     # 'parsed_section', 'n_images', 'language', 'parts_of_speech', 'n_images_with_faces', 'detected_face_positions', 'split']
@@ -118,9 +128,11 @@ def main():
     projection = ['_id', 'parsed_section']
 
     sfrom = True
-    l = [os.path.basename(i) for i in glob(base_path+"*")]
+    l = [os.path.basename(i) for i in glob(base_path + "*")]
 
-    #for aid in tqdm(ids):
+    if prints:
+        ids = tqdm(ids)
+
     for aid in ids:
         if not agent:
             if full_search:
@@ -138,13 +150,16 @@ def main():
         a = db.articles.find_one({'_id': {'$eq': aid}}, projection=projection)
         sections = a['parsed_section']
         paragraphs = [p for p in sections if p['type'] == 'paragraph']
+        if not len(paragraphs):
+            continue
         tokens = [tokenizer.tokenize(c['text']) for c in paragraphs]
         context = ListTextField([TextField(p, token_indexer) for p in tokens])
         context.index(vocab)
         context = context.as_tensor(context.get_padding_lengths())
         r = roberta.extract_features(context['roberta']).detach()
 
-        torch.save(r, base_path+aid)
+        torch.save(r, base_path + aid)
+
 
 if __name__ == '__main__':
     main()

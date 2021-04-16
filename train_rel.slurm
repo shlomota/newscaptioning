@@ -1,4 +1,6 @@
 #! /bin/sh
+#SBATCH --mail-user=shlomotannor@mail.tau.ac.il
+#SBATCH --mail-type=ALL
 #SBATCH --output=train_%j.out
 #SBATCH --error=train_%j.err
 #SBATCH --partition=studentkillable

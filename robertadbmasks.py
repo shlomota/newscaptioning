@@ -25,6 +25,7 @@ db = client.nytimes
 split = 'train'
 reverse = False
 full_search = False
+overwrite = False
 
 if 'train' in sys.argv:
     split = 'train'
@@ -37,6 +38,9 @@ if 'r' in sys.argv:
 
 if 'fs' in sys.argv:
     full_search = True
+
+if 'ow' in sys.argv:
+    overwrite = True
 
 if split not in ['train', 'test']:
     raise Exception('w0t?')
@@ -55,6 +59,7 @@ roberta = torch.hub.load('pytorch/fairseq:2f7e3f3323', 'roberta.large')
 roberta.eval()
 
 ids = np.load(base_path+'_ids.npy')
+#ids = np.load("/a/home/cc/students/cs/shlomotannor/nlp_course/newscaptioning/_missing_mask.npy")
 
 if reverse:
     ids = ids[::-1]
@@ -66,25 +71,32 @@ if reverse:
 
 projection = ['_id', 'parsed_section']
 
-sfrom = True
-l = [os.path.basename(id) for id in glob(base_path+"*m")]
+if not overwrite:
+    sfrom = True
+    l = [os.path.basename(id)[:-1] for id in glob(base_path+"*m")]
+print(len(ids))
 
 for aid in tqdm(ids):
-    if full_search:
-        l = [os.path.basename(id) for id in glob(base_path + "*m")]
-        if aid in l:
-            continue
-    else:
-        if sfrom:
+    if not overwrite:
+        if full_search:
+            l = [os.path.basename(id) for id in glob(base_path + "*m")]
             if aid in l:
                 continue
-            else:
-                sfrom = False
-                del l
+        else:
+            if sfrom:
+                if aid in l:
+                    continue
+                else:
+                    sfrom = False
+                    del l
 
     a = db.articles.find_one({'_id': {'$eq': aid}}, projection=projection)
     sections = a['parsed_section']
     paragraphs = [p for p in sections if p['type'] == 'paragraph']
+
+    if not len(paragraphs):
+        continue
+
     tokens = [tokenizer.tokenize(c['text']) for c in paragraphs]
     context = ListTextField([TextField(p, token_indexer) for p in tokens])
     context.index(vocab)

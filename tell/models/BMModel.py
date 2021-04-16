@@ -7,8 +7,6 @@ import torch.nn.functional as F
 from allennlp.data.vocabulary import Vocabulary
 from allennlp.nn.initializers import InitializerApplicator
 
-import numpy as np
-
 import copy
 import math
 import re
@@ -96,22 +94,25 @@ class BMModel(Model):
                 names: Dict[str, torch.LongTensor] = None,
                 attn_idx=None) -> Dict[str, torch.Tensor]:
 
+        #TODO: understand shape of context, what is roberta/roberta_copy_masks, why are labels identical (perhaps because there's only one example?)
+        #todo: make text not go through roberta before
+        # print("context: ", context)
+        # print("image: ", image)
+        # print("face_embeds: ", face_embeds)
+        # print("obj_embeds: ", obj_embeds)
+        # print("names: ", names)
+        # print("labels: ", label)
+
+        # split_context = split_list(context["roberta"], "BLABLA")
+        # assert len(split_context) == len(labels)
+
         # stage 1: use only resnet of image and roberta of text (and linear layers)
         im = self.resnet(image).detach()
-        conv = self.conv(im)
-        if conv.shape[0] == 1:
-            conv = conv[0].squeeze().unsqueeze(0)
-        else:
-            conv = conv.squeeze()
-        im_vec = F.relu(conv)
-
+        im_vec = self.relu(self.conv(im).squeeze())
         hiddens = self.roberta.extract_features(context["roberta"]).detach()
-        mask = context["roberta_copy_masks"]  # [B, N]
+        # using only first and last hidden because size can change
+        # h = torch.cat([hiddens[:,0,:], hiddens[:,-1,:]], dim=-1)
         h = torch.mean(hiddens, dim=1)
-        # sums = torch.sum(hiddens, dim=1)
-        # h = sums / np.tile(np.argmin(mask, axis=-1)[:, np.newaxis], sums.shape[-1]).astype(np.float32)
-        h[torch.isnan(h)] = 0
-        h[torch.isinf(h)] = 1e15
         text_vec = self.relu(self.linear(h))
 
         # TODO: use tensors and correct code
