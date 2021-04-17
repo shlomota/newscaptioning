@@ -127,9 +127,9 @@ class BMRelModel(Model):
 
         im_vec = F.relu(conv)  # [ 512 ]
 
-        c = context['roberta']  # [B, K, N]
-        mask = context["roberta_copy_masks"]  # [B, K, N]
-        hiddens = torch.stack([self.roberta.extract_features(p).detach() for p in c])  # [B, K, N, 1024]
+        # c = context['roberta']  # [B, K, N]
+        # mask = context["roberta_copy_masks"]  # [B, K, N]
+        # hiddens = torch.stack([self.roberta.extract_features(p).detach() for p in c])  # [B, K, N, 1024]
 
         hiddens = [torch.load(f"{self.dbr}{dbrf}/{i}") for i in aid]
         masks = [torch.load(f"{self.dbr}{dbrf}/{i}m") for i in aid]
