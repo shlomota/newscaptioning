@@ -135,6 +135,7 @@ class BMRelModel(Model):
         hiddens = torch.stack(hiddens)
         hiddens = [hiddens[:, [index1[i], index2[i]], :] for i in range(len(index1))]
         masks = [torch.load(f"{self.dbr}{dbrf}/{i}m") for i in aid]
+        masks = torch.stack(masks)
         masks = [masks[:, [index1[i], index2[i]], :] for i in range(len(index1))]
         m = [torch.add(i.unsqueeze(-1).expand(*i.shape, 1024), 1) for i in masks]
         # cshape = c.shape
