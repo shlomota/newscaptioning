@@ -1,7 +1,10 @@
+import warnings
 from tell.commands.train import train_model_from_file
 import shutil
 import os
 import sys
+
+warnings.filterwarnings("ignore", category=DeprecationWarning)
 
 idd = ""
 if len(sys.argv) > 1:

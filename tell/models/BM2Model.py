@@ -52,7 +52,7 @@ class BM2Model(Model):
                  sampling_topk: int = 1,
                  sampling_temp: float = 1.0,
                  weigh_bert: bool = False,
-                 arch: int=0,
+                 arch: int = 0,
                  initializer: InitializerApplicator = InitializerApplicator()) -> None:
         super().__init__(vocab)
         # self.criterion = criterion
@@ -76,6 +76,7 @@ class BM2Model(Model):
         self.conv = nn.Conv2d(2048, 512, 7)
 
         self.arch = arch
+        print("arch", self.arch)
 
         if self.arch in [0]:
             self.linear = nn.Linear(1024, 512)
@@ -96,8 +97,8 @@ class BM2Model(Model):
         initializer(self)
 
     def forward(self,  # type: ignore
-                aid: List[str, Any],
-                split: List[str, Any],
+                aid: List[str],
+                split: List[str],
                 label: torch.Tensor,
                 image: torch.Tensor,
                 caption: Dict[str, torch.LongTensor],
@@ -110,12 +111,10 @@ class BM2Model(Model):
         # aid = [hex(int("".join(map(str, map(int, i)))))[2:] for i in aid]  # [B]
 
         split = split[0]
-        print(aid, split)
-        
+
         dbrf = ''
         if split == 'test' or split == 'valid':
             dbrf = split
-            print(dbrf)
 
         label = label.squeeze()
         im = self.resnet(image).detach()
@@ -133,7 +132,7 @@ class BM2Model(Model):
         v = v.expand((B, N, 1))  # [B,N,1]
         mask = torch.bmm(mask, v).squeeze(-1).bool()  # [B,K]'''
 
-        if arch in [2]:
+        if self.arch in [2]:
             im_vec = conv  # [ 512 ]
         else:
             im_vec = F.relu(conv)  # [ 512 ]
@@ -141,9 +140,9 @@ class BM2Model(Model):
         # c = context['roberta']  # [B, K, N]
         # hiddens = torch.stack([self.roberta.extract_features(p).detach() for p in c])  # [B, K, N, 1024]
 
-        c = [torch.load(f"{self.dbr}{dbrf}{i}") for i in aid]
+        c = [torch.load(f"{self.dbr}{dbrf}/{i}") for i in aid]
 
-        m = [torch.load(f"{self.dbr}{dbrf}{i}m") for i in aid]
+        m = [torch.load(f"{self.dbr}{dbrf}/{i}m") for i in aid]
         m = [torch.add(i.unsqueeze(-1).expand(*i.shape, 1024), 1) for i in m]
 
         c = [torch.mean(c*m[ci], dim=1) for ci, c in enumerate(c)]
@@ -165,10 +164,10 @@ class BM2Model(Model):
 
         text_vec = F.relu(self.linear(c))
 
-        if arch in [1, 2]:
+        if self.arch in [1, 2]:
             text_vec = self.linear2(text_vec)
 
-        if arch in [1]:
+        if self.arch in [1]:
             text_vec = F.relu(text_vec)
 
         # text_vec [B, N, 512]
@@ -191,13 +190,11 @@ class BM2Model(Model):
         # if not self.training and self.evaluate_mode:
         #    pass
 
-        self.n_batches += 1
+        if split == 'train':
+            self.n_batches += 1
+            strloss = f'{self.n_batches}:{loss}'
+            print(strloss)
 
-        strloss = f'{self.n_batches}:{loss}'
-        print(strloss)
-
-        #open('/a/home/cc/students/cs/shlomotannor/nlp_course/newscaptioning/BMM.log', 'a').write(strloss + '\n')
-
-        # raise Exception("bla")
+            #open('/a/home/cc/students/cs/shlomotannor/nlp_course/newscaptioning/BMM.log', 'a').write(strloss + '\n')
 
         return output_dict

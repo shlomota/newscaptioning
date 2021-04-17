@@ -47,7 +47,7 @@ iterator:
   batch_size: 16
   max_instances_in_memory: 8192
   biggest_batch_first: false
-  instances_per_epoch: 16
+  instances_per_epoch: 1024
   #instances_per_epoch: 256
   maximum_samples_per_batch: ["num_tokens", 16384]
 validation_iterator:
@@ -57,9 +57,9 @@ validation_iterator:
       - num_tokens
   batch_size: 16
   max_instances_in_memory: 8192
-  instances_per_epoch: 16
+  instances_per_epoch: 512
   maximum_samples_per_batch: ["num_tokens", 16384]
   biggest_batch_first: false
 trainer:
   optimizer: adam
-  num_epochs: 1
+  num_epochs: 100

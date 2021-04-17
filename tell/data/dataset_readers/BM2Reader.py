@@ -104,9 +104,9 @@ class BM2Reader(DatasetReader):
         base = "/specific/netapp5/joberant/nlp_fall_2021/shlomotannor/newscaptioning/"
         splitn = ''
         if split == 'test':
-            splitn = 'test'
+            splitn = '_test'
         elif split == 'valid':
-            splitn = 'valid'
+            splitn = '_valid'
 
         ids = np.array([])
         while not len(ids):  # is someone else reading/writing ? Wait a bit...
@@ -114,7 +114,7 @@ class BM2Reader(DatasetReader):
                 ids = np.load(f"{base}_ids{splitn}.npy")
 
             except Exception:
-                time.sleep(1)
+                sleep(1)
 
         self.rs.shuffle(ids)
         print(f"found {len(ids)} article ids")
