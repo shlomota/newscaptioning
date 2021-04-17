@@ -84,31 +84,18 @@ class BMRelModel(Model):
         self.n_samples = 0
         self.sample_history = {}
 
-        self.dbr = "/specific/netapp5/joberant/nlp_fall_2021/shlomotannor/newscaptioning/dbr/"
-
         initializer(self)
 
     def forward(self,  # type: ignore
-                aid: List[str],
-                split: List[str],
-                index1: torch.Tensor,
-                index2: torch.Tensor,
+                context: List[Dict[str, torch.LongTensor]],
                 label: torch.Tensor,
                 image: torch.Tensor,
                 caption: Dict[str, torch.LongTensor],
-                # face_embeds: torch.Tensor,
-                # obj_embeds: torch.Tensor,
-                # metadata: List[Dict[str, Any]],
-                # names: Dict[str, torch.LongTensor] = None,
+                face_embeds: torch.Tensor,
+                obj_embeds: torch.Tensor,
+                metadata: List[Dict[str, Any]],
+                names: Dict[str, torch.LongTensor] = None,
                 attn_idx=None) -> Dict[str, torch.Tensor]:
-
-        # aid = [hex(int("".join(map(str, map(int, i)))))[2:] for i in aid]  # [B]
-
-        split = split[0]
-
-        dbrf = ''
-        if split == 'test' or split == 'valid':
-            dbrf = split
 
         label = label.squeeze()
         im = self.resnet(image).detach()
@@ -126,16 +113,9 @@ class BMRelModel(Model):
         # mask = torch.bmm(mask, v).squeeze(-1).bool()  # [B,K]
 
         im_vec = F.relu(conv)  # [ 512 ]
-
         c = context['roberta']  # [B, K, N]
         mask = context["roberta_copy_masks"]  # [B, K, N]
         hiddens = torch.stack([self.roberta.extract_features(p).detach() for p in c])  # [B, K, N, 1024]
-
-        hiddens = [torch.load(f"{self.dbr}{dbrf}/{i}") for i in aid]
-        masks = [torch.load(f"{self.dbr}{dbrf}/{i}m") for i in aid]
-        hiddens = [hiddens[:, [index1[i], index2[i]], :] for i in range(len(index1))]
-        masks = [masks[:, [index1[i], index2[i]], :] for i in range(len(index1))]
-        m = [torch.add(i.unsqueeze(-1).expand(*i.shape, 1024), 1) for i in masks]
         # cshape = c.shape
         # c = c.view(cshape[0] * cshape[1], -1)  # [BK, N]
         # hiddens = self.roberta.extract_features(c).detach().view(cshape+(1024,))  # [B, K, N, 1024]
@@ -162,7 +142,7 @@ class BMRelModel(Model):
             'score0': score[:, 0],
             'score1': score[:, 1],
             'loss': loss,
-            'probs': score
+            # 'probs': score
         }
 
         self.n_batches += 1

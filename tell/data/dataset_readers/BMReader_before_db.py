@@ -3,8 +3,6 @@ import os
 import random
 import re
 from typing import Dict, List
-from time import sleep
-import math
 
 import numpy as np
 import pymongo
@@ -35,8 +33,8 @@ def tokenize_line(line):
     return line.split()
 
 
-@DatasetReader.register('BMRelReader')
-class BMRelReader(DatasetReader):
+@DatasetReader.register('BMReader')
+class BMReader(DatasetReader):
     """Read from the New York Times dataset.
 
     See the repo README for more instruction on how to download the dataset.
@@ -93,24 +91,19 @@ class BMRelReader(DatasetReader):
 
         logger.info('Grabbing all article IDs')
 
-        # load npy ids
-        base = "/specific/netapp5/joberant/nlp_fall_2021/shlomotannor/newscaptioning/"
-        splitn = ''
-        if split == 'test':
-            splitn = '_test'
-        elif split == 'valid':
-            splitn = '_valid'
+        # TODO: restore this
+        # sample_cursor = self.db.articles.find({
+        #     'split': split,
+        # }, projection=['_id']).sort('_id', pymongo.ASCENDING)
+        # ids = np.array([article['_id'] for article in tqdm(sample_cursor)])
+        # sample_cursor.close()
+        # self.rs.shuffle(ids)
 
-        ids = np.array([])
-        while not len(ids):  # is someone else reading/writing ? Wait a bit...
-            try:
-                ids = np.load(f"{base}_ids{splitn}.npy")
-
-            except Exception:
-                sleep(1)
-
-        self.rs.shuffle(ids)
-        print(f"found {len(ids)} article ids")
+        # TODO: just for debug
+        article = self.db.articles.find_one({
+            'split': split,
+        }, projection=['_id'])
+        ids = np.array([article['_id']])
 
         projection = ['_id', 'parsed_section.type', 'parsed_section.text',
                       'parsed_section.hash', 'parsed_section.parts_of_speech',
@@ -126,19 +119,12 @@ class BMRelReader(DatasetReader):
         for article_id in ids[:self.articles_num]:
             article = self.db.articles.find_one(
                 {'_id': {'$eq': article_id}}, projection=projection)
-
-            image_positions = article['image_positions']
-
             sections = article['parsed_section']
 
             paragraphs = []
             named_entities = set()
 
-            paragraphs = [p for p in sections if p['type'] == 'paragraph']
-
-            if not len(paragraphs) or len(paragraphs) < 2:
-                continue
-
+            paragraphs += [p for p in sections if p['type'] == 'paragraph']
             paragraphs_texts = [p["text"] for p in paragraphs]
 
             for p in paragraphs:
@@ -148,6 +134,7 @@ class BMRelReader(DatasetReader):
             tokenized_corpus = [doc.split(" ") for doc in paragraphs_texts]
             bm25 = BM25Okapi(tokenized_corpus)
 
+            image_positions = article['image_positions']
             for pos in image_positions:
                 caption = sections[pos]['text'].strip()
                 if not caption:
@@ -158,10 +145,10 @@ class BMRelReader(DatasetReader):
                 tokenized_query = query.split(" ")
                 paragraphs_scores = bm25.get_scores(tokenized_query)
 
-                # TODO: select random two paragraphs
-                i1, i2 = np.random.choice(range(len(paragraphs_scores)), size=2, replace=False)
-                current_paragraphs = [paragraphs[i1], paragraphs[i2]]
-                relative_score = 1 * (paragraphs_scores[i2] > paragraphs_scores[i1])
+                # apply softmax
+                # TODO: restore?
+                # paragraphs_scores = np.exp(paragraphs_scores)
+                # paragraphs_scores = paragraphs_scores / paragraphs_scores.sum(0)
 
                 image_id = f'{article_id}_{pos}'
 
@@ -179,46 +166,80 @@ class BMRelReader(DatasetReader):
                 except (FileNotFoundError, OSError):
                     continue
 
-                face_embeds = np.array([[]])
-
-                '''
                 if 'facenet_details' not in sections[pos] or n_persons == 0:
                     face_embeds = np.array([[]])
                 else:
                     face_embeds = sections[pos]['facenet_details']['embeddings']
                     # Keep only the top faces (sorted by size)
-                    face_embeds = np.array(face_embeds[:n_persons])'''
+                    face_embeds = np.array(face_embeds[:n_persons])
 
                 obj_feats = None
-                # if self.use_objects:
-                #     obj = self.db.objects.find_one(
-                #         {'_id': sections[pos]['hash']})
-                #     if obj is not None:
-                #         obj_feats = obj['object_features']
-                #         if len(obj_feats) == 0:
-                #             obj_feats = np.array([[]])
-                #         else:
-                #             obj_feats = np.array(obj_feats)
-                #     else:
-                #         obj_feats = np.array([[]])
+                if self.use_objects:
+                    obj = self.db.objects.find_one(
+                        {'_id': sections[pos]['hash']})
+                    if obj is not None:
+                        obj_feats = obj['object_features']
+                        if len(obj_feats) == 0:
+                            obj_feats = np.array([[]])
+                        else:
+                            obj_feats = np.array(obj_feats)
+                    else:
+                        obj_feats = np.array([[]])
 
-                yield self.article_to_instance(
-                    article_id, i1, i2, relative_score, named_entities, image, caption, image_path,
-                    article['web_url'], pos, face_embeds, obj_feats, image_id, split)
+                for i, _ in enumerate(paragraphs):
+                    yield self.article_to_instance(
+                        paragraphs_texts[i], paragraphs_scores[i], named_entities, image, caption, image_path,
+                        article['web_url'], pos, face_embeds, obj_feats, image_id)
+                # yield self.article_to_instance(
+                #         paragraphs,paragraphs_scores, named_entities, image, caption, image_path,
+                #         article['web_url'], pos, face_embeds, obj_feats, image_id)
 
-    def article_to_instance(self, article_id, i1, i2, relative_score, named_entities, image, caption,
-                            image_path, web_url, pos, face_embeds, obj_feats, image_id, split) -> Instance:
+    # def article_to_instance(self, paragraphs, paragraphs_scores, named_entities, image, caption,
+    #                         image_path, web_url, pos, face_embeds, obj_feats, image_id) -> Instance:
+
+    def article_to_instance(self, paragraph, paragraph_score, named_entities, image, caption,
+                            image_path, web_url, pos, face_embeds, obj_feats, image_id) -> Instance:
+        # context = ' BLABLA '.join([p["text"] for p in paragraphs]).strip()
+        context = paragraph
+
+        # context_tokens = [self._tokenizer.tokenize(p["text"]) for p in paragraphs]
+        # context_tokens = [self._tokenizer.tokenize(p["text"]) for p in paragraphs]
+        context_tokens = self._tokenizer.tokenize(context)
         caption_tokens = self._tokenizer.tokenize(caption)
+        name_token_list = [self._tokenizer.tokenize(n) for n in named_entities]
+
+        if name_token_list:
+            name_field = [TextField(tokens, self._token_indexers)
+                          for tokens in name_token_list]
+        else:
+            stub_field = ListTextField(
+                [TextField(caption_tokens, self._token_indexers)])
+            name_field = stub_field.empty_field()
 
         fields = {
-            'aid': MetadataField(article_id),
-            'split': MetadataField(split),
-            'index1': MetadataField(i1),
-            'index2': MetadataField(i2),
+            'context': TextField(context_tokens, self._token_indexers),
+            # 'context': ListTextField([TextField(p, self._token_indexers) for p in context_tokens]),
+            # 'context': ListTextField(context_tokens),
+            'names': ListTextField(name_field),
             'image': ImageField(image, self.preprocess),
             'caption': TextField(caption_tokens, self._token_indexers),
-            'label': LabelField(int(relative_score), skip_indexing=True)
+            'face_embeds': ArrayField(face_embeds, padding_value=np.nan),
+            'label': ArrayField(np.array([paragraph_score]))
+            # 'labels': ArrayField(paragraphs_score)
         }
+
+        if obj_feats is not None:
+            fields['obj_embeds'] = ArrayField(obj_feats, padding_value=np.nan)
+
+        metadata = {'context': context,
+                    'caption': caption,
+                    'names': named_entities,
+                    'web_url': web_url,
+                    'image_path': image_path,
+                    'image_pos': pos,
+                    'image_id': image_id,
+                    'label': paragraph_score}
+        fields['metadata'] = MetadataField(metadata)
 
         return Instance(fields)
 
