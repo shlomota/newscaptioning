@@ -40,10 +40,8 @@ if not 'noplot' in sys.argv:
     plt.legend()
     plt.xlabel("epoch")
     plt.ylabel("Loss")
-    plt.savefig(os.path.join(SERIALIZATION_DIR, "fig.png"))
     plt.show()
 else:
     print(len(sorted_files))
     print(training_loss)
     print(validation_loss)
-    

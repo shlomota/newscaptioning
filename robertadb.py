@@ -44,6 +44,9 @@ def main():
     if 'test' in sys.argv:
         split = 'test'
 
+    if 'valid' in sys.argv:
+        split = 'valid'
+
     if 'r' in sys.argv:
         reverse = True
 
@@ -89,11 +92,13 @@ def main():
         else:
             agenti = int(agenti)
 
-    if split not in ['train', 'test']:
+    if split not in ['train', 'test', 'valid']:
         raise Exception('w0t?')
 
     if split == 'test':
         base_path += 'test/'
+    elif split == 'valid':
+        base_path += 'valid/'
 
     tokenizer = Tokenizer.from_params(config.get('dataset_reader').get('tokenizer'))
     indexer_params = config.get('dataset_reader').get('token_indexers')
@@ -104,7 +109,7 @@ def main():
     roberta.eval()
 
     if agent:
-        agent_ids = 3000
+        agent_ids = 2000
         ids = np.load(base_path + '_ids_missing.npy')
         ids = ids[agenti * agent_ids: (agenti + 1) * agent_ids]
 

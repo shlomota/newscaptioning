@@ -102,15 +102,16 @@ class BM2Reader(DatasetReader):
 
         #load npy ids
         base = "/specific/netapp5/joberant/nlp_fall_2021/shlomotannor/newscaptioning/"
+        splitn = ''
         if split == 'test':
-            test = 'test'
-        else:
-            test = ''
+            splitn = 'test'
+        elif split == 'valid':
+            splitn = 'valid'
 
         ids = np.array([])
         while not len(ids):  # is someone else reading/writing ? Wait a bit...
             try:
-                ids = np.load(f"{base}_ids{test}.npy")
+                ids = np.load(f"{base}_ids{splitn}.npy")
 
             except Exception:
                 time.sleep(1)
@@ -220,13 +221,13 @@ class BM2Reader(DatasetReader):
                         article['web_url'], pos, face_embeds, obj_feats, image_id)'''
                 yield self.article_to_instance(
                      article_id, paragraphs_scores, named_entities, image, caption, image_path,
-                     article['web_url'], pos, face_embeds, obj_feats, image_id, article_id)
+                     article['web_url'], pos, face_embeds, obj_feats, image_id, article_id, split)
 
     # def article_to_instance(self, paragraphs, paragraphs_scores, named_entities, image, caption,
     #                         image_path, web_url, pos, face_embeds, obj_feats, image_id) -> Instance:
 
     def article_to_instance(self, aid, paragraphs_scores, named_entities, image, caption,
-                            image_path, web_url, pos, face_embeds, obj_feats, image_id, article_id) -> Instance:
+                            image_path, web_url, pos, face_embeds, obj_feats, image_id, article_id, split) -> Instance:
         #context = paragraphs
 
         # context_tokens = [self._tokenizer.tokenize(c['text']) for c in context]
@@ -269,8 +270,8 @@ class BM2Reader(DatasetReader):
                     'image_pos': pos,
                     'image_id': image_id,
                     'article_id': article_id}'''
-        aid = {'aid': aid}
         fields['aid'] = MetadataField(aid)
+        fields['split'] = MetadataField(split)
 
         return Instance(fields)
 

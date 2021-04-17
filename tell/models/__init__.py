@@ -12,4 +12,3 @@ from .transformer_pointer_2 import TransformerPointer2Model
 from .BMModel import BMModel
 from .BM2Model import BM2Model
 from .BM3Model import BM3Model
-from .BMRelModel import BMRelModel

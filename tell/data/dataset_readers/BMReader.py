@@ -93,18 +93,22 @@ class BMReader(DatasetReader):
         logger.info('Grabbing all article IDs')
 
         #TODO: restore this
-        sample_cursor = self.db.articles.find({
-            'split': split,
-        }, projection=['_id']).sort('_id', pymongo.ASCENDING)
-        ids = np.array([article['_id'] for article in tqdm(sample_cursor)])
-        sample_cursor.close()
-        self.rs.shuffle(ids)
+        # sample_cursor = self.db.articles.find({
+        #     'split': split,
+        # }, projection=['_id']).sort('_id', pymongo.ASCENDING)
+        # ids = np.array([article['_id'] for article in tqdm(sample_cursor)])
+        # sample_cursor.close()
+        # self.rs.shuffle(ids)
 
         # TODO: just for debug
-        '''article = self.db.articles.find_one({
+        article = self.db.articles.find_one({
             'split': split,
         }, projection=['_id'])
-        ids = np.array([article['_id']])'''
+        ids = np.array([article['_id']])
+
+
+
+
 
         projection = ['_id', 'parsed_section.type', 'parsed_section.text',
                       'parsed_section.hash', 'parsed_section.parts_of_speech',
@@ -192,7 +196,7 @@ class BMReader(DatasetReader):
 
                 for i, _ in enumerate(paragraphs):
                     yield self.article_to_instance(
-                        paragraphs_texts[i], paragraphs_scores[i], named_entities, image, caption, image_path,
+                        paragraphs_texts[i],paragraphs_scores[i], named_entities, image, caption, image_path,
                         article['web_url'], pos, face_embeds, obj_feats, image_id)
                 # yield self.article_to_instance(
                 #         paragraphs,paragraphs_scores, named_entities, image, caption, image_path,

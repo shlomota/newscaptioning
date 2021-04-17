@@ -33,6 +33,9 @@ if 'train' in sys.argv:
 if 'test' in sys.argv:
     split = 'test'
 
+if 'valid' in sys.argv:
+    split = 'valid'
+
 if 'r' in sys.argv:
     reverse = True
 
@@ -42,11 +45,13 @@ if 'fs' in sys.argv:
 if 'ow' in sys.argv:
     overwrite = True
 
-if split not in ['train', 'test']:
+if split not in ['train', 'test', 'valid']:
     raise Exception('w0t?')
 
 if split == 'test':
     base_path += 'test/'
+elif split == 'valid':
+    base_path += 'valid/'
 
 articles = db.articles.find({'split': split}, projection=['_id']).sort('_id', pymongo.ASCENDING)
 

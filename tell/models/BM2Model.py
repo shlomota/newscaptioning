@@ -93,15 +93,11 @@ class BM2Model(Model):
 
         self.dbr = "/specific/netapp5/joberant/nlp_fall_2021/shlomotannor/newscaptioning/dbr/"
 
-        self.test = ""
-
-        if not self.training and self.evaluate_mode:
-            self.test = "test/"
-
         initializer(self)
 
     def forward(self,  # type: ignore
-                aid: List[Dict[str, Any]],
+                aid: List[str, Any],
+                split: List[str, Any],
                 label: torch.Tensor,
                 image: torch.Tensor,
                 caption: Dict[str, torch.LongTensor],
@@ -112,7 +108,14 @@ class BM2Model(Model):
                 attn_idx=None) -> Dict[str, torch.Tensor]:
 
         # aid = [hex(int("".join(map(str, map(int, i)))))[2:] for i in aid]  # [B]
-        aid = [i['aid'] for i in aid]
+
+        split = split[0]
+        print(aid, split)
+        
+        dbrf = ''
+        if split == 'test' or split == 'valid':
+            dbrf = split
+            print(dbrf)
 
         label = label.squeeze()
         im = self.resnet(image).detach()
@@ -138,9 +141,9 @@ class BM2Model(Model):
         # c = context['roberta']  # [B, K, N]
         # hiddens = torch.stack([self.roberta.extract_features(p).detach() for p in c])  # [B, K, N, 1024]
 
-        c = [torch.load(f"{self.dbr}{self.test}{i}") for i in aid]
+        c = [torch.load(f"{self.dbr}{dbrf}{i}") for i in aid]
 
-        m = [torch.load(f"{self.dbr}{self.test}{i}m") for i in aid]
+        m = [torch.load(f"{self.dbr}{dbrf}{i}m") for i in aid]
         m = [torch.add(i.unsqueeze(-1).expand(*i.shape, 1024), 1) for i in m]
 
         c = [torch.mean(c*m[ci], dim=1) for ci, c in enumerate(c)]
