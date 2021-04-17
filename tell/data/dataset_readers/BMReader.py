@@ -136,10 +136,6 @@ class BMReader(DatasetReader):
             paragraphs += [p for p in sections if p['type'] == 'paragraph']
             paragraphs_texts = [p["text"] for p in paragraphs]
 
-            for p in paragraphs:
-                named_entities |= self._get_named_entities(p)
-            named_entities = sorted(named_entities)
-
             tokenized_corpus = [doc.split(" ") for doc in paragraphs_texts]
             bm25 = BM25Okapi(tokenized_corpus)
 
@@ -158,13 +154,6 @@ class BMReader(DatasetReader):
 
                 image_id = f'{article_id}_{pos}'
 
-                if self.n_faces is not None:
-                    n_persons = self.n_faces
-                elif self.use_caption_names:
-                    n_persons = len(self._get_person_names(sections[pos]))
-                else:
-                    n_persons = 4
-
                 image_path = os.path.join(
                     self.image_dir, f"{sections[pos]['hash']}.jpg")
                 try:
@@ -174,26 +163,7 @@ class BMReader(DatasetReader):
 
                 face_embeds = np.array([[]])
 
-                '''
-                if 'facenet_details' not in sections[pos] or n_persons == 0:
-                    face_embeds = np.array([[]])
-                else:
-                    face_embeds = sections[pos]['facenet_details']['embeddings']
-                    # Keep only the top faces (sorted by size)
-                    face_embeds = np.array(face_embeds[:n_persons])'''
-
                 obj_feats = None
-                # if self.use_objects:
-                #     obj = self.db.objects.find_one(
-                #         {'_id': sections[pos]['hash']})
-                #     if obj is not None:
-                #         obj_feats = obj['object_features']
-                #         if len(obj_feats) == 0:
-                #             obj_feats = np.array([[]])
-                #         else:
-                #             obj_feats = np.array(obj_feats)
-                #     else:
-                #         obj_feats = np.array([[]])
 
                 for i, _ in enumerate(paragraphs):
                     yield self.article_to_instance(

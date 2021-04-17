@@ -50,8 +50,6 @@ iterator:
 validation_iterator:
   type: bucket
   sorting_keys:
-    - - context
-      - num_tokens
     - - caption
       - num_tokens
   batch_size: 16
