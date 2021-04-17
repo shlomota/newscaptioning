@@ -1,11 +1,30 @@
 import os
 import sys
-
+from time import sleep
 tepochs = 64
-if len(sys.argv) > 2:
-    tepochs = sys.argv[2]
+tlist = [i.startswith('tepochs') for i in sys.argv]
+if True in tlist:
+    tepochs = sys.argv[tlist.index(True)][len('tepochs'):].split("_")
 
-a = f"cat train2_{sys.argv[1]}.err | grep ' 1/{tepochs}' | wc -l"
+periodic = False
 
-a = os.system(a)
+if 'periodic' in sys.argv:
+    periodic = True
+
+while True:
+
+    if "_" in sys.argv[1]:
+        os.system('clear')
+        for ind,i in enumerate(sys.argv[1].split("_")):
+            a = f"cat train2_{i}.err | grep ' 1/{tepochs[ind]}' | wc -l"
+            a = os.system(a)
+        
+    else:
+        a = f"cat train2_{sys.argv[1]}.err | grep ' 1/{tepochs[0]}' | wc -l"
+        a = os.system(a)
+
+    if not periodic:
+        break
+
+    sleep(300)
 
