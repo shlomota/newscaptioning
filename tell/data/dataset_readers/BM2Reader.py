@@ -77,7 +77,6 @@ class BM2Reader(DatasetReader):
         self.use_caption_names = use_caption_names
         self.use_objects = use_objects
         self.n_faces = n_faces
-        random.seed(1234)
         self.rs = np.random.RandomState(1234)
 
         roberta = torch.hub.load('pytorch/fairseq:2f7e3f3323', 'roberta.base')
