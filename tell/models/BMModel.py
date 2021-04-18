@@ -118,12 +118,13 @@ class BMModel(Model):
 
         im_vec = self.relu(conv)
 
-        hiddens = [torch.load(f"{self.dbr}{dbrf}/{i}")[index[i]] for i in aid]
-        masks = [torch.load(f"{self.dbr}{dbrf}/{i}m")[index[i]] for i in aid]
+        hiddens = [torch.load(f"{self.dbr}{dbrf}/{id}")[index[i]] for i, id in enumerate(aid)]
+        masks = [torch.load(f"{self.dbr}{dbrf}/{id}m")[index[i]] for i, id in enumerate(aid)]
         m = [torch.add(i.unsqueeze(-1).expand(*i.shape, 1024), 1) for i in masks]
         # hiddens = self.roberta.extract_features(context["roberta"]).detach()
         # using only first and last hidden because size can change
         # h = torch.cat([hiddens[:,0,:], hiddens[:,-1,:]], dim=-1)
+        hiddens = torch.nn.utils.rnn.pad_sequence(hiddens, batch_first=True)
         h = torch.mean(hiddens, dim=1)
         text_vec = self.relu(self.linear(h))
 
