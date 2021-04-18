@@ -103,6 +103,7 @@ class BMModel(Model):
         split = split[0]
 
         dbrf = ''
+        a = 1
         if split == 'test' or split == 'valid':
             dbrf = split
 
