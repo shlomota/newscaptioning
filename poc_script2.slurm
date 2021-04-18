@@ -1,7 +1,7 @@
 #! /bin/sh
 #SBATCH --output=poc2_%j.out
 #SBATCH --error=poc2_%j.err
-#SBATCH --partition=studentbatch
+#SBATCH --partition=studentkillable
 #SBATCH --job-name newscaptioning1
 #SBATCH --nodes=1
 #SBATCH --ntasks=1

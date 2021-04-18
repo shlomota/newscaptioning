@@ -134,7 +134,6 @@ class NewReader2R(DatasetReader):
             self.articles_num = len(ids)
 
         print(f'articles num: {self.articles_num}')
-        self.articles_num = 20
         for article_id in ids[:self.articles_num]:
             article = self.db.articles.find_one(
                 {'_id': {'$eq': article_id}}, projection=projection)
@@ -239,35 +238,34 @@ class NewReader2R(DatasetReader):
                 paragraphs = [p for p in sections if p['type'] == 'paragraph']
 
                 # todo: restore
-                paragraphs_texts = [p["text"] for p in paragraphs]
+                # paragraphs_texts = [p["text"] for p in paragraphs]
                 # tokened = [self._tokenizer.tokenize(paragraphs_texts[0])]
                 # test_field = TextField(tokened, self._token_indexers)
-                tokenized_corpus = [doc.split(" ") for doc in paragraphs_texts]
+                # tokenized_corpus = [doc.split(" ") for doc in paragraphs_texts]
 
                 # RON - TODO - Remember that I stopped here - this is model.forward, and we need the results
                 fields = []
                 for p in paragraphs:
-                    # def article_to_bm_instance(self, paragraph, paragraph_score, named_entities, image, caption="a a",
-                    #                            image_path, web_url, pos, face_embeds, obj_feats, image_id) -> Instance:
+                    fields.append(
+                        self.article_to_bm_instance(p["text"], None, p["named_entities"], image, "a a", image_path,
+                                                    None, None, None, None, None).fields)
+                all_probs = []
+                for p in fields:
+                    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+                    img = p["image"].image.unsqueeze(0).to(device)
+                    p["context"]["roberta"] = p["context"]["roberta"].unsqueeze(0)
 
-                    fields.append(self.article_to_bm_instance(context, None, p["named_entities"], image, "a a", image_path, None, None, None, None, None).fields)
-                #                 caption: Dict[str, torch.LongTensor],
-                #                 face_embeds: torch.Tensor,
-                #                 obj_embeds: torch.Tensor,
-                #                 metadata: List[Dict[str, Any]],
-                # for p in fields:
-                p = fields[0]
-                device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-                img = p["image"].image.unsqueeze(0).to(device)
-                context = {"roberta": p["context"]}
-                results = self.model.forward(context=p["context"], label=torch.tensor([[1]]),
-                                             image=img, caption=p["caption"], face_embeds=torch.tensor([[1]]), obj_embeds=torch.tensor([[1]]), metadata=[])
+                    results = self.model.forward(context=p["context"], label=torch.tensor([1]).to(device),
+                                                 image=img, caption=p["caption"], face_embeds=torch.tensor([[1]]),
+                                                 obj_embeds=torch.tensor([[1]]), metadata=[])
+                    all_probs.append(results["probs"])
+                paragraphs_scores = torch.stack(all_probs).to(device="cpu").numpy()
+                # print(f"\n\nRESULTS:{results['loss']}\n=========\nSHAPE:{results['probs'].shape}\n", results)
+                # bm25 = BM25Okapi(tokenized_corpus)
+                # query = caption
+                # tokenized_query = query.split(" ")
+                # paragraphs_scores = bm25.get_scores(tokenized_query)
 
-                print(f"\n\nRESULTS:{results['loss']}\n=========\nSHAPE:{results['probs'].shape}\n", results)
-                bm25 = BM25Okapi(tokenized_corpus)
-                query = caption
-                tokenized_query = query.split(" ")
-                paragraphs_scores = bm25.get_scores(tokenized_query)
 
                 df = pd.DataFrame(columns=["paragraph", "score", "i"])
                 df.paragraph = paragraphs
@@ -381,7 +379,7 @@ class NewReader2R(DatasetReader):
 
     # RON - TODO. Bad habit copied from BMReader (in the optimal case - we will call a general function, instead of copy it to here)
     def article_to_bm_instance(self, paragraph, paragraph_score, named_entities, image, caption,
-                            image_path, web_url, pos, face_embeds, obj_feats, image_id) -> Instance:
+                               image_path, web_url, pos, face_embeds, obj_feats, image_id) -> Instance:
         # context = ' BLABLA '.join([p["text"] for p in paragraphs]).strip()
         context = paragraph
 
@@ -399,8 +397,11 @@ class NewReader2R(DatasetReader):
                 [TextField(caption_tokens, self._token_indexers)])
             name_field = stub_field.empty_field()
 
+        context = TextField(context_tokens, self._token_indexers)
+        context.index(self.model.vocab)
+        context = context.as_tensor(context.get_padding_lengths())
         fields = {
-            'context': TextField(context_tokens, self._token_indexers),
+            'context': context,
             # 'context': ListTextField([TextField(p, self._token_indexers) for p in context_tokens]),
             # 'context': ListTextField(context_tokens),
             'names': ListTextField(name_field),
@@ -425,8 +426,6 @@ class NewReader2R(DatasetReader):
         fields['metadata'] = MetadataField(metadata)
 
         return Instance(fields)
-
-
 
     def _get_named_entities(self, section):
         # These name indices have the right end point excluded

@@ -109,6 +109,7 @@ class BM2Reader(DatasetReader):
             splitn = '_valid'
 
         ids = np.array([])
+        print("asdf")
         while not len(ids):  # is someone else reading/writing ? Wait a bit...
             try:
                 ids = np.load(f"{base}_ids{splitn}.npy")
@@ -221,13 +222,13 @@ class BM2Reader(DatasetReader):
                         article['web_url'], pos, face_embeds, obj_feats, image_id)'''
                 yield self.article_to_instance(
                      article_id, paragraphs_scores, named_entities, image, caption, image_path,
-                     article['web_url'], pos, face_embeds, obj_feats, image_id, article_id, split)
+                     article['web_url'], pos, face_embeds, obj_feats, image_id, split)
 
     # def article_to_instance(self, paragraphs, paragraphs_scores, named_entities, image, caption,
     #                         image_path, web_url, pos, face_embeds, obj_feats, image_id) -> Instance:
 
     def article_to_instance(self, aid, paragraphs_scores, named_entities, image, caption,
-                            image_path, web_url, pos, face_embeds, obj_feats, image_id, article_id, split) -> Instance:
+                            image_path, web_url, pos, face_embeds, obj_feats, image_id, split) -> Instance:
         #context = paragraphs
 
         # context_tokens = [self._tokenizer.tokenize(c['text']) for c in context]

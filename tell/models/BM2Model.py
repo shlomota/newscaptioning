@@ -141,12 +141,18 @@ class BM2Model(Model):
         # hiddens = torch.stack([self.roberta.extract_features(p).detach() for p in c])  # [B, K, N, 1024]
 
         c = [torch.load(f"{self.dbr}{dbrf}/{i}") for i in aid]
-
         m = [torch.load(f"{self.dbr}{dbrf}/{i}m") for i in aid]
         m = [torch.add(i.unsqueeze(-1).expand(*i.shape, 1024), 1) for i in m]
+        #m = [i.bool() for i in m]
 
-        c = [torch.mean(c*m[ci], dim=1) for ci, c in enumerate(c)]
+        c = [torch.sum(cv*m[ci], dim=1)/torch.sum(m[ci], dim=1) for ci, cv in enumerate(c)]
+
+        cshapes = torch.tensor([cv.shape[0] for cv in c])
         c = torch.nn.utils.rnn.pad_sequence(c, batch_first=True)  # [B, N, 1024]
+
+        #torch.save(c, '/a/home/cc/students/cs/shlomotannor/nlp_course/newscaptioning/c.pt')
+
+        #c = (torch.arange(c.size(1)) < cshapes[..., None]).unsqueeze(-1).repeat(1, 1, 1024) * c
 
         # cshape = c.shape
         # c = c.view(cshape[0] * cshape[1], -1)  # [BK, N]
@@ -170,9 +176,13 @@ class BM2Model(Model):
         if self.arch in [1]:
             text_vec = F.relu(text_vec)
 
+        #torch.save(text_vec, '/a/home/cc/students/cs/shlomotannor/nlp_course/newscaptioning/tv.pt')
+
         # text_vec [B, N, 512]
 
-        score = torch.bmm(text_vec, im_vec.unsqueeze(-1)).squeeze(-1)  # [B, N, 512] bmm [B, 512, 1] . s = [B,N]
+        score = torch.bmm(text_vec, im_vec.unsqueeze(-1)).squeeze(-1)  # [B, N, 512] bmm [B, 512, 1] . s = [B, N]
+        score_mask = ~(torch.arange(score.size(1)) < cshapes[..., None])  # [B, N] pad out
+        score[score_mask] = float("-inf")
 
         # torch.save(mask, '/a/home/cc/students/cs/shlomotannor/nlp_course/newscaptioning/mask.pt')
         # torch.save(score, '/a/home/cc/students/cs/shlomotannor/nlp_course/newscaptioning/score.pt')

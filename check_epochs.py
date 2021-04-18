@@ -1,7 +1,7 @@
 import os
 import sys
 from time import sleep
-tepochs = 64
+tepochs = [64]*100
 tlist = [i.startswith('tepochs') for i in sys.argv]
 if True in tlist:
     tepochs = sys.argv[tlist.index(True)][len('tepochs'):].split("_")

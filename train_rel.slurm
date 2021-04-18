@@ -1,8 +1,8 @@
 #! /bin/sh
 #SBATCH --mail-user=shlomotannor@mail.tau.ac.il
 #SBATCH --mail-type=ALL
-#SBATCH --output=train_%j.out
-#SBATCH --error=train_%j.err
+#SBATCH --output=train_rel_%j.out
+#SBATCH --error=train_rel_%j.err
 #SBATCH --partition=studentkillable
 #SBATCH --job-name newscaptioning_train
 #SBATCH --nodes=1

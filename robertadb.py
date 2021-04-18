@@ -22,7 +22,13 @@ def main():
     config_path = "expt/nytimes/BM2/config.yaml"
     config = yaml_to_params(config_path, overrides='')
 
-    client = pymongo.MongoClient(host='nova', port=27017)
+    host = 'nova'
+    hosti = [i.startswith('host') for i in sys.argv]
+    if True in hosti:
+        print(f'using host {host}')
+        host = sys.argv[hosti.index(True)].split("_")[1]
+
+    client = pymongo.MongoClient(host=host, port=27017)
     db = client.nytimes
 
     split = 'train'
