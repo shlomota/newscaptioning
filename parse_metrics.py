@@ -7,6 +7,7 @@ import pandas as pd
 
 BASE_PATH = "/a/home/cc/students/cs/shlomotannor/nlp_course/newscaptioning/expt/nytimes"
 DIR = "BM/serialization_40_256/"
+DIR = "BMRel/serialization_mean_100_2048/"
 
 if len(sys.argv) > 1:
     DIR = sys.argv[1]
