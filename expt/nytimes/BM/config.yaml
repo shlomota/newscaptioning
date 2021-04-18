@@ -11,7 +11,7 @@ dataset_reader:
       padding_on_right: true
       padding_value: 1
       max_len: 512
-  mongo_host: "c-006"
+  mongo_host: "c-006.cs.tau.ac.il"
   image_dir: /a/home/cc/students/cs/shlomotannor/nlp_course/newscaptioning/data/nytimes/images_processed
   lazy: true
   use_caption_names: false
