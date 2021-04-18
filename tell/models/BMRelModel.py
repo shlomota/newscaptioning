@@ -139,7 +139,7 @@ class BMRelModel(Model):
 
         hiddens = [torch.sum(cv * masks[ci], dim=1) / torch.sum(masks[ci], dim=1) for ci, cv in enumerate(hiddens)]
         hiddens = torch.nn.utils.rnn.pad_sequence(hiddens, batch_first=True)  # [B, N, 1024]
-        h = [hiddens[:, [index1[i], index2[i]], :] for i in range(len(index1))]
+        h = torch.stack([hiddens[i, [index1[i], index2[i]], :] for i in range(len(index1))])
 
         # masks = torch.nn.utils.rnn.pad_sequence(masks, batch_first=True)
         # # masks = torch.stack(masks)
