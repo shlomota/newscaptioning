@@ -15,8 +15,8 @@ while True:
 
     if "_" in sys.argv[1]:
         os.system('clear')
-        for ind,i in enumerate(sys.argv[1].split("_")):
-            a = f"cat train2_{i}.err | grep ' 1/{tepochs[ind]}' | wc -l"
+        for ind,i in enumerate(sys.argv[1].split("*")):
+            a = f"cat {i}.err | grep ' 1/{tepochs[ind]}' | wc -l"
             a = os.system(a)
         
     else:

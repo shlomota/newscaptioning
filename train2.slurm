@@ -1,10 +1,12 @@
 #! /bin/sh
-#SBATCH --output=train2_%j.out
-#SBATCH --error=train2_%j.err
-#SBATCH --partition=studentbatch
-#SBATCH --job-name newscaptioning_train2
+#SBATCH --mail-user=maorkehati@mail.tau.ac.il
+#SBATCH --mail-type=ALL
+#SBATCH --output=tr2a2_%j.out
+#SBATCH --error=tr2a2_%j.err
+#SBATCH --partition=studentkillable
+#SBATCH --job-name tr2a2
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
 #SBATCH --gpus=1
-/specific/netapp5/joberant/nlp_fall_2021/shlomotannor/anaconda3/envs/tell/bin/python trainBM2.py arch0_1024_512_100 arch0
+/specific/netapp5/joberant/nlp_fall_2021/shlomotannor/anaconda3/envs/tell/bin/python trainBM2.py Narch2_1024_512_100 arch2
 

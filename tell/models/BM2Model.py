@@ -193,7 +193,7 @@ class BM2Model(Model):
 
         output_dict = {
             'loss': loss,
-            # 'probs': score
+            'probs': score
         }
 
         # During evaluation...
