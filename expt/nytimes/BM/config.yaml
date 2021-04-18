@@ -46,7 +46,7 @@ iterator:
   batch_size: 16
   max_instances_in_memory: 8192
   biggest_batch_first: false
-  instances_per_epoch: 66536
+  instances_per_epoch: 8192
   maximum_samples_per_batch: ["num_tokens", 16384]
 validation_iterator:
   type: bucket
@@ -57,6 +57,7 @@ validation_iterator:
   max_instances_in_memory: 8192
   maximum_samples_per_batch: ["num_tokens", 16384]
   biggest_batch_first: false
+  instances_per_epoch: 2048
 trainer:
   optimizer: adam
-  num_epochs: 1
+  num_epochs: 100
