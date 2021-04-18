@@ -81,40 +81,47 @@ class BMModel(Model):
         self.n_samples = 0
         self.sample_history = {}
 
+        self.dbr = "/specific/netapp5/joberant/nlp_fall_2021/shlomotannor/newscaptioning/dbr/"
+
         initializer(self)
 
     def forward(self,  # type: ignore
-                context: Dict[str, torch.LongTensor],
+                aid: List[str],
+                split: List[str],
+                index: torch.Tensor,
                 label: torch.Tensor,
                 image: torch.Tensor,
                 caption: Dict[str, torch.LongTensor],
-                face_embeds: torch.Tensor,
-                obj_embeds: torch.Tensor,
-                metadata: List[Dict[str, Any]],
-                names: Dict[str, torch.LongTensor] = None,
+                # face_embeds: torch.Tensor,
+                # obj_embeds: torch.Tensor,
+                # metadata: List[Dict[str, Any]],
+                # names: Dict[str, torch.LongTensor] = None,
                 attn_idx=None) -> Dict[str, torch.Tensor]:
 
-        #TODO: understand shape of context, what is roberta/roberta_copy_masks, why are labels identical (perhaps because there's only one example?)
-        #todo: make text not go through roberta before
-        # print("context: ", context)
-        # print("image: ", image)
-        # print("face_embeds: ", face_embeds)
-        # print("obj_embeds: ", obj_embeds)
-        # print("names: ", names)
-        # print("labels: ", label)
+        # aid = [hex(int("".join(map(str, map(int, i)))))[2:] for i in aid]  # [B]
 
-        # split_context = split_list(context["roberta"], "BLABLA")
-        # assert len(split_context) == len(labels)
+        split = split[0]
 
-        # stage 1: use only resnet of image and roberta of text (and linear layers)
+        dbrf = ''
+        a = 1
+        if split == 'test' or split == 'valid':
+            dbrf = split
+
+        label = label.squeeze()
         im = self.resnet(image).detach()
+
         conv = self.conv(im)
         if conv.shape[0] == 1:
             conv = conv[0].squeeze().unsqueeze(0)
         else:
             conv = conv.squeeze()
+
         im_vec = self.relu(conv)
-        hiddens = self.roberta.extract_features(context["roberta"]).detach()
+
+        hiddens = [torch.load(f"{self.dbr}{dbrf}/{i}")[index[i]] for i in aid]
+        masks = [torch.load(f"{self.dbr}{dbrf}/{i}m")[index[i]] for i in aid]
+        m = [torch.add(i.unsqueeze(-1).expand(*i.shape, 1024), 1) for i in masks]
+        # hiddens = self.roberta.extract_features(context["roberta"]).detach()
         # using only first and last hidden because size can change
         # h = torch.cat([hiddens[:,0,:], hiddens[:,-1,:]], dim=-1)
         h = torch.mean(hiddens, dim=1)
@@ -124,10 +131,6 @@ class BMModel(Model):
         # scores = torch.tensor([im @ p for p in split_context])
         score = torch.bmm(text_vec.unsqueeze(1), im_vec.unsqueeze(-1)).squeeze()
         # sm_scores = nn.Softmax()(scores) #use torch nn
-
-        # During evaluation...
-        if not self.training and self.evaluate_mode:
-            label = score
 
         loss = self.loss_func(score, label)
         # loss = nn.CrossEntropyLoss(scores, labels)
@@ -143,9 +146,10 @@ class BMModel(Model):
             'probs': score
         }
 
+        # During evaluation...
+        if not self.training and self.evaluate_mode:
+            pass
 
         self.n_batches += 1
 
         return output_dict
-
-
