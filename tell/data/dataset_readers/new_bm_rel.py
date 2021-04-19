@@ -3,10 +3,13 @@ import os
 import random
 import re
 from typing import Dict
+from time import sleep
 
 import numpy as np
 import pymongo
+import shutil
 import torch
+from allennlp.data import DataIterator
 from allennlp.data.dataset_readers.dataset_reader import DatasetReader
 from allennlp.data.fields import ArrayField, MetadataField, TextField
 from allennlp.data.instance import Instance
@@ -19,6 +22,8 @@ from torchvision.transforms import Compose, Normalize, ToTensor
 from tqdm import tqdm
 import pandas as pd
 
+from tell.commands.bm_evaluate import get_model_from_file, evaluate
+from tell.commands.train import yaml_to_params
 from tell.data.fields import ImageField, ListTextField
 
 from rank_bm25 import BM25Okapi
@@ -32,6 +37,25 @@ def tokenize_line(line):
     line = SPACE_NORMALIZER.sub(" ", line)
     line = line.strip()
     return line.split()
+
+
+CONFIG_PATH = "expt/nytimes/BMRel/config.yaml"
+BASE_PATH = "/a/home/cc/students/cs/shlomotannor/nlp_course/newscaptioning/"
+# SERIALIZATION_DIR = os.path.join(BASE_PATH, "expt/nytimes/BM/serialization_sum_good/")
+SERIALIZATION_DIR = os.path.join(BASE_PATH, "expt/nytimes/BMRel/serialization_mean_100_2048/best.th")
+
+
+# FULL PATH -  /a/home/cc/students/cs/shlomotannor/nlp_course/newscaptioning/expt/nytimes/BM/serialization_1/
+
+
+def get_bmmodel():
+    # print("directory content:", os.listdir(SERIALIZATION_DIR))
+    # shutil.rmtree(SERIALIZATION_DIR)
+    # print("after remove")
+    overrides = """{"vocabulary":
+                     {"type": "roberta",
+                      "directory_path": "./expt/vocabulary"}"""
+    return get_model_from_file(CONFIG_PATH, SERIALIZATION_DIR)
 
 
 @DatasetReader.register('new_bm_rel')
@@ -85,6 +109,7 @@ class NewBMRelReader(DatasetReader):
         self.articles_num = articles_num
         self.use_first = use_first
         self.sort_BM = sort_BM
+        self.model = get_bmmodel()
 
     @overrides
     def _read(self, split: str):
@@ -94,18 +119,29 @@ class NewBMRelReader(DatasetReader):
             raise ValueError(f'Unknown split: {split}')
 
         logger.info('Grabbing all article IDs')
-        sample_cursor = self.db.articles.find({
-            'split': split,
-        }, projection=['_id']).sort('_id', pymongo.ASCENDING)
-        ids = np.array([article['_id'] for article in tqdm(sample_cursor)])
-        sample_cursor.close()
-        self.rs.shuffle(ids)
+
+        # load npy ids
+        base = "/specific/netapp5/joberant/nlp_fall_2021/shlomotannor/newscaptioning/"
+        splitn = ''
+        if split == 'test':
+            splitn = '_test'
+        elif split == 'valid':
+            splitn = '_valid'
+
+        print('split', split)
+
+        ids = np.array([])
+        while not len(ids):  # is someone else reading/writing ? Wait a bit...
+            try:
+                ids = np.load(f"{base}_ids{splitn}.npy")
+
+            except Exception:
+                sleep(1)
+
+        np.random.shuffle(ids)
 
         projection = ['_id', 'parsed_section.type', 'parsed_section.text',
-                      'parsed_section.hash', 'parsed_section.parts_of_speech',
-                      'parsed_section.facenet_details', 'parsed_section.named_entities',
-                      'image_positions', 'headline',
-                      'web_url', 'n_images_with_faces']
+                      'parsed_section.hash', 'image_positions']
         if self.articles_num == -1:
             self.articles_num = len(ids)
 
@@ -215,12 +251,20 @@ class NewBMRelReader(DatasetReader):
                 paragraphs = [p for p in sections if p['type'] == 'paragraph']
 
                 # todo: restore
-                paragraphs_texts = [p["text"] for p in paragraphs]
-                tokenized_corpus = [doc.split(" ") for doc in paragraphs_texts]
-                bm25 = BM25Okapi(tokenized_corpus)
-                query = caption
-                tokenized_query = query.split(" ")
-                paragraphs_scores = bm25.get_scores(tokenized_query)
+                device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+                results = self.model.forward(aid=[article_id] * len(paragraphs), index1=range(len(paragraphs)),
+                                             index2=range(len(paragraphs)), split=[split],
+                                             label=torch.tensor([1]).to(device),
+                                             image=ImageField(image, self.preprocess))
+                scores = results["score0"]
+                paragraphs_scores = torch.stack(scores).to(device="cpu").numpy()
+
+                # paragraphs_texts = [p["text"] for p in paragraphs]
+                # tokenized_corpus = [doc.split(" ") for doc in paragraphs_texts]
+                # bm25 = BM25Okapi(tokenized_corpus)
+                # query = caption
+                # tokenized_query = query.split(" ")
+                # paragraphs_scores = bm25.get_scores(tokenized_query)
 
                 df = pd.DataFrame(columns=["paragraph", "score", "i"])
                 df.paragraph = paragraphs

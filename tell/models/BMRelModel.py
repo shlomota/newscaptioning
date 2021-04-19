@@ -167,7 +167,7 @@ class BMRelModel(Model):
             'score0': score[:, 0],
             'score1': score[:, 1],
             'loss': loss,
-            'probs': score
+            'probs': single_value_score
         }
 
         self.n_batches += 1
