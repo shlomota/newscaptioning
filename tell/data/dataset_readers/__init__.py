@@ -14,4 +14,8 @@ from .BMReader import BMReader
 from .BM2Reader import BM2Reader
 from .BMRelReader import BMRelReader
 from .new_bm import NewBMReader
+<<<<<<< HEAD
 from .new_bm_sm import BM2EvalReader
+=======
+from .BMRelReader_ft import BMRelReaderFT
+>>>>>>> 433e4937b9f16227309704e2dcb67056cb9b0ba3

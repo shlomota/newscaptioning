@@ -1,0 +1,64 @@
+dataset_reader:
+  type: BMRelReaderFT
+  tokenizer:
+    type: word
+    word_splitter: just_spaces_keep_newlines
+  token_indexers:
+    roberta:
+      type: roberta
+      model_name: roberta-base
+      namespace: bpe
+      padding_on_right: true
+      padding_value: 1
+      max_len: 512
+  mongo_host: "c-006.cs.tau.ac.il"
+  image_dir: /a/home/cc/students/cs/shlomotannor/nlp_course/newscaptioning/data/nytimes/images_processed
+  lazy: true
+  use_caption_names: false
+  use_objects: true
+  articles_num: -1
+train_data_path: train
+validation_data_path: valid
+test_data_path: test
+vocabulary:
+  type: roberta
+  directory_path: ./expt/vocabulary
+model:
+  type: BMRelModel
+  criterion:
+    type: adaptive_loss
+    padding_idx: 1
+  use_context: true
+  evaluate_mode: false
+  sampling_topk: 1
+  vocab_size: 50265
+  hidden_size: 1024
+  attention_dim: 1024
+  namespace: bpe
+  index: roberta
+  weigh_bert: true
+  padding_value: 1
+iterator:
+  type: bucket
+  sorting_keys:
+    - - caption
+      - num_tokens
+  batch_size: 16
+  max_instances_in_memory: 8192
+  biggest_batch_first: false
+  instances_per_epoch: 2048
+  #  instances_per_epoch: 66536
+  maximum_samples_per_batch: [ "num_tokens", 16384 ]
+validation_iterator:
+  type: bucket
+  sorting_keys:
+    - - caption
+      - num_tokens
+  batch_size: 16
+  instances_per_epoch: 1024
+  max_instances_in_memory: 8192
+  maximum_samples_per_batch: [ "num_tokens", 16384 ]
+  biggest_batch_first: false
+trainer:
+  optimizer: adam
+  num_epochs: 100
