@@ -4,7 +4,7 @@ import os
 
 base_path = "/a/home/cc/students/cs/shlomotannor/nlp_course/newscaptioning/"
 parameter_filename = "expt/nytimes/BMRelFT/config.yaml"
-serialization_dir = base_path + "expt/nytimes/BMRelFT/serialization_mean_100_2048"
+serialization_dir = base_path + "expt/nytimes/BMRelFT/serialization_mean_100_2048_gpu"
 
 LOSSLOG = os.path.join(base_path, 'BM_rel2.log')
 
