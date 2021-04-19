@@ -291,8 +291,8 @@ class BM2EvalReader(DatasetReader):
                     sorted_paragraphs, named_entities, image, caption, image_path,
                     article['web_url'], pos, face_embeds, obj_feats, image_id, pi_chosen)
 
-    def article_to_instance(self, paragraphs, named_entities, image, caption,
-                            image_path, pos, face_embeds, image_id, pi_chosen) -> Instance:
+    def article_to_instance(self, paragraphs, named_entities, image, caption, image_path,
+                            web_url, pos, face_embeds, obj_feats, image_id, pi_chosen) -> Instance:
         context = '\n'.join(paragraphs).strip()
 
         context_tokens = self._tokenizer.tokenize(context)
