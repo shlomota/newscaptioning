@@ -141,7 +141,10 @@ class NewBMRelReader(DatasetReader):
         np.random.shuffle(ids)
 
         projection = ['_id', 'parsed_section.type', 'parsed_section.text',
-                      'parsed_section.hash', 'image_positions']
+                      'parsed_section.hash', 'parsed_section.parts_of_speech',
+                      'parsed_section.facenet_details', 'parsed_section.named_entities',
+                      'image_positions', 'headline',
+                      'web_url', 'n_images_with_faces']
         if self.articles_num == -1:
             self.articles_num = len(ids)
 
@@ -178,43 +181,6 @@ class NewBMRelReader(DatasetReader):
                 else:
                     n_persons = 4
 
-                # old way - 1st + around image
-                pi_chosen = []
-                before = []
-                after = []
-                i = pos - 1
-                j = pos + 1
-                for k, section in enumerate(sections):
-                    if section['type'] == 'paragraph':
-                        paragraphs.append(section['text'])
-                        named_entities |= self._get_named_entities(section)
-                        pi_chosen.append(k)
-                        break
-
-                while True:
-                    if i > k and sections[i]['type'] == 'paragraph':
-                        text = sections[i]['text']
-                        before.insert(0, text)
-                        named_entities |= self._get_named_entities(sections[i])
-                        n_words += len(self.to_token_ids(text))
-                        pi_chosen.append(i)
-                    i -= 1
-
-                    if k < j < len(sections) and sections[j]['type'] == 'paragraph':
-                        text = sections[j]['text']
-                        after.append(text)
-                        named_entities |= self._get_named_entities(sections[j])
-                        n_words += len(self.to_token_ids(text))
-                        pi_chosen.append(j)
-                    j += 1
-
-                    if n_words >= 510 or (i <= k and j >= len(sections)):
-                        break
-
-                paragraphs = paragraphs + before + after
-                named_entities = sorted(named_entities)
-                pi_chosen.sort()
-
                 image_path = os.path.join(
                     self.image_dir, f"{sections[pos]['hash']}.jpg")
                 try:
@@ -242,35 +208,26 @@ class NewBMRelReader(DatasetReader):
                     else:
                         obj_feats = np.array([[]])
 
-                '''yield self.article_to_instance(
-                    paragraphs, named_entities, image, caption, image_path,
-                    article['web_url'], pos, face_embeds, obj_feats, image_id, pi_chosen, gen_type=1)
-                '''
-
                 # 'new' way of sending every paragraph
                 paragraphs = [p for p in sections if p['type'] == 'paragraph']
 
-                # todo: restore
                 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+
+                iff = ImageField(image, self.preprocess)
+                iff = iff.as_tensor(iff.get_padding_lengths()).unsqueeze(0)
+                iff = iff.to(device)
+
                 results = self.model.forward(aid=[article_id] * len(paragraphs), index1=range(len(paragraphs)),
                                              index2=range(len(paragraphs)), split=[split],
                                              label=torch.tensor([1]).to(device),
-                                             image=ImageField(image, self.preprocess))
+                                             image=ImageField(iff))
                 scores = results["score0"]
                 paragraphs_scores = torch.stack(scores).to(device="cpu").numpy()
-
-                # paragraphs_texts = [p["text"] for p in paragraphs]
-                # tokenized_corpus = [doc.split(" ") for doc in paragraphs_texts]
-                # bm25 = BM25Okapi(tokenized_corpus)
-                # query = caption
-                # tokenized_query = query.split(" ")
-                # paragraphs_scores = bm25.get_scores(tokenized_query)
 
                 df = pd.DataFrame(columns=["paragraph", "score", "i"])
                 df.paragraph = paragraphs
                 df.score = paragraphs_scores
                 df.i = list(range(len(paragraphs)))
-                # df.score = list(range(len(paragraphs)))
                 df = df.sort_index(ascending=True)
 
                 if self.sort_BM:
@@ -333,11 +290,10 @@ class NewBMRelReader(DatasetReader):
                 named_entities = sorted(named_entities)
                 yield self.article_to_instance(
                     sorted_paragraphs, named_entities, image, caption, image_path,
-                    article['web_url'], pos, face_embeds, obj_feats, image_id, pi_chosen, gen_type=2)
+                    article['web_url'], pos, face_embeds, obj_feats, image_id, pi_chosen)
 
     def article_to_instance(self, paragraphs, named_entities, image, caption,
-                            image_path, web_url, pos, face_embeds, obj_feats, image_id, pi_chosen,
-                            gen_type) -> Instance:
+                            image_path, web_url, pos, face_embeds, obj_feats, image_id, pi_chosen) -> Instance:
         context = '\n'.join(paragraphs).strip()
 
         context_tokens = self._tokenizer.tokenize(context)
@@ -370,7 +326,6 @@ class NewBMRelReader(DatasetReader):
                     'image_path': image_path,
                     'image_pos': pos,
                     'pi_chosen': pi_chosen,
-                    'gen_type': gen_type,
                     'image_id': image_id}
         fields['metadata'] = MetadataField(metadata)
 
