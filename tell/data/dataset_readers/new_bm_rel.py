@@ -220,7 +220,7 @@ class NewBMRelReader(DatasetReader):
                 results = self.model.forward(aid=[article_id] * len(paragraphs), index1=range(len(paragraphs)),
                                              index2=range(len(paragraphs)), split=[split],
                                              label=torch.tensor([1]).to(device),
-                                             image=ImageField(iff))
+                                             image=iff)
                 scores = results["score0"]
                 paragraphs_scores = torch.stack(scores).to(device="cpu").numpy()
 
