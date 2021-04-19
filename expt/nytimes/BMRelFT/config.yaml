@@ -62,3 +62,4 @@ validation_iterator:
 trainer:
   optimizer: adam
   num_epochs: 100
+  cuda_device: 0
