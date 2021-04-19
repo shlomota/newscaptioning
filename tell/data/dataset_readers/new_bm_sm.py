@@ -191,7 +191,8 @@ class NewReader2R(DatasetReader):
 
                 df = df.sort_index(ascending=True)
 
-                if self.sort_BM:
+                #if self.sort_BM:
+                if True:
                     sorted_df = df.sort_values("score", ascending=False)
                     thresh = 0
                     text_count = 0
