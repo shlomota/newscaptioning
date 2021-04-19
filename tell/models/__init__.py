@@ -13,3 +13,4 @@ from .BMModel import BMModel
 from .BM2Model import BM2Model
 from .BM3Model import BM3Model
 from .BMRelModel import BMRelModel
+from .BMRelModel_ft import BMRelModelFT

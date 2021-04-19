@@ -35,8 +35,8 @@ def split_list(li, val):
     return result
 
 
-@Model.register("BMRelModel")
-class BMRelModel(Model):
+@Model.register("BMRelModelFT")
+class BMRelModelFT(Model):
     def __init__(self,
                  vocab: Vocabulary,
                  criterion: Criterion,
