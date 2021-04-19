@@ -38,10 +38,10 @@ def tokenize_line(line):
     return line.split()
 
 
-CONFIG_PATH = "expt/nytimes/BM/config.yaml"
+CONFIG_PATH = "expt/nytimes/BM2/config.yaml"
 BASE_PATH = "/a/home/cc/students/cs/shlomotannor/nlp_course/newscaptioning/"
 # SERIALIZATION_DIR = os.path.join(BASE_PATH, "expt/nytimes/BM/serialization_sum_good/")
-SERIALIZATION_DIR = os.path.join(BASE_PATH, "expt/nytimes/BM/serialization_sum_good/best.th")
+SERIALIZATION_DIR = os.path.join(BASE_PATH, "expt/nytimes/BM2/serializationarch1_1024_512_100/best.th")
 
 
 # FULL PATH -  /a/home/cc/students/cs/shlomotannor/nlp_course/newscaptioning/expt/nytimes/BM/serialization_1/
@@ -57,8 +57,8 @@ def get_bmmodel():
     return get_model_from_file(CONFIG_PATH, SERIALIZATION_DIR)
 
 
-@DatasetReader.register('new2r')
-class NewReader2R(DatasetReader):
+@DatasetReader.register('BM2Eval')
+class BM2EvalReader(DatasetReader):
     """Read from the New York Times dataset.
 
     See the repo README for more instruction on how to download the dataset.
@@ -99,8 +99,6 @@ class NewReader2R(DatasetReader):
         self.use_caption_names = use_caption_names
         self.use_objects = use_objects
         self.n_faces = n_faces
-        random.seed(1234)
-        self.rs = np.random.RandomState(1234)
 
         roberta = torch.hub.load('pytorch/fairseq:2f7e3f3323', 'roberta.base')
         self.bpe = roberta.bpe
@@ -137,7 +135,7 @@ class NewReader2R(DatasetReader):
             except Exception:
                 sleep(1)
 
-        self.rs.shuffle(ids)
+        np.random.shuffle(ids)
 
         projection = ['_id', 'parsed_section.type', 'parsed_section.text',
                       'parsed_section.hash', 'image_positions']
