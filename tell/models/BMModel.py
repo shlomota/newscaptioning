@@ -109,19 +109,19 @@ class BMModel(Model):
 
         label = label.squeeze()
         im = self.resnet(image).detach()
-
         conv = self.conv(im)
         if conv.shape[0] == 1:
             conv = conv[0].squeeze().unsqueeze(0)
         else:
             conv = conv.squeeze()
-
         im_vec = self.relu(conv)
+        # hiddens = self.roberta.extract_features(context["roberta"]).detach()
 
         hiddens = [torch.load(f"{self.dbr}{dbrf}/{id}")[index[i]] for i, id in enumerate(aid)]
         masks = [torch.load(f"{self.dbr}{dbrf}/{id}m")[index[i]] for i, id in enumerate(aid)]
         m = [torch.add(i.unsqueeze(-1).expand(*i.shape, 1024), 1) for i in masks]
         # hiddens = self.roberta.extract_features(context["roberta"]).detach()
+
         # using only first and last hidden because size can change
         # h = torch.cat([hiddens[:,0,:], hiddens[:,-1,:]], dim=-1)
         hiddens = torch.nn.utils.rnn.pad_sequence(hiddens, batch_first=True)
@@ -132,6 +132,10 @@ class BMModel(Model):
         # scores = torch.tensor([im @ p for p in split_context])
         score = torch.bmm(text_vec.unsqueeze(1), im_vec.unsqueeze(-1)).squeeze()
         # sm_scores = nn.Softmax()(scores) #use torch nn
+
+        # During evaluation...
+        if not self.training and self.evaluate_mode:
+            label = score
 
         loss = self.loss_func(score, label)
         # loss = nn.CrossEntropyLoss(scores, labels)
@@ -147,9 +151,6 @@ class BMModel(Model):
             'probs': score
         }
 
-        # During evaluation...
-        if not self.training and self.evaluate_mode:
-            pass
 
         self.n_batches += 1
 

@@ -173,7 +173,7 @@ class NewReader2R(DatasetReader):
                 j = pos + 1
                 for k, section in enumerate(sections):
                     if section['type'] == 'paragraph':
-                        paragraphs.append(section['text'])
+                        paragraphs.append(section['textnew2r'])
                         named_entities |= self._get_named_entities(section)
                         pi_chosen.append(k)
                         break
@@ -247,7 +247,7 @@ class NewReader2R(DatasetReader):
                 fields = []
                 for p in paragraphs:
                     fields.append(
-                        self.article_to_bm_instance(p["text"], None, p["named_entities"], image, "a a", image_path,
+                        self.article_to_bm_instance(p["text"], None, p["named_entities"], image, "FAKE CAPTION", image_path,
                                                     None, None, None, None, None).fields)
                 all_probs = []
                 for p in fields:

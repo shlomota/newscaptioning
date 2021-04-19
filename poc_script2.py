@@ -19,23 +19,7 @@ G_JSONL = os.path.join(TAT_FOLDER, G_JSONL)
 
 # if os.path.exists(G_JSONL):
 #     os.remove(G_JSONL)
-
-
-def run():
-    eff(YAML, SER, device=0)
-
-
-need_to_run = True
-i = 0
-while need_to_run:
-    print(f"While...{i}")
-    try:
-        eff(YAML, SER, device=0)
-    except RuntimeError as e:
-        print(e)
-        continue
-
-    need_to_run = False
+eff(YAML, SER, device=0)
 
 now = datetime.datetime.now()
 shutil.copyfile(G_JSONL, os.path.join(TAT_FOLDER, OUTS_FOLDER,
