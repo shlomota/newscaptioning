@@ -6,8 +6,10 @@ import json
 import pandas as pd
 
 BASE_PATH = "/a/home/cc/students/cs/shlomotannor/nlp_course/newscaptioning/expt/nytimes"
-DIR = "BM/serialization_40_256/"
-DIR = "BMRel/serialization_mean_100_2048/"
+# DIR = "BM/serialization_40_256/"
+# DIR = "BMRel/serialization_mean_100_2048/"
+DIR = "BM/serialization_mean_100_8192/"
+# DIR = "BM2/serializationarch1_1024_512_100/"
 
 if len(sys.argv) > 1:
     DIR = sys.argv[1]
@@ -15,6 +17,7 @@ if len(sys.argv) > 1:
 SERIALIZATION_DIR = os.path.join(BASE_PATH, DIR)
 if not os.path.exists(SERIALIZATION_DIR):
     raise Exception("yo wut?")
+
 
 # SERIALIZATION_DIR = os.path.join(BASE_PATH, "expt/nytimes/BMRel/serialization_mean/")
 

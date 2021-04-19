@@ -14,3 +14,4 @@ from .BMReader import BMReader
 from .BM2Reader import BM2Reader
 from .BMRelReader import BMRelReader
 from .new_bm import NewBMReader
+from .BMRelReader_ft import BMRelReaderFT
