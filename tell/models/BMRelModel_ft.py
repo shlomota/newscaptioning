@@ -59,6 +59,7 @@ class BMRelModel(Model):
         self.criterion = nn.BCELoss()
 
         self.index = index
+
         self.namespace = namespace
         self.resnet = resnet152()
         self.roberta = torch.hub.load(
@@ -97,13 +98,16 @@ class BMRelModel(Model):
                 names: Dict[str, torch.LongTensor] = None,
                 attn_idx=None) -> Dict[str, torch.Tensor]:
 
-        label = label.squeeze()
+        # label = label.squeeze()
+        device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+        label = label.squeeze().to(device)
         im = self.resnet(image)
         conv = self.conv(im)
         if conv.shape[0] == 1:
             conv = conv[0].squeeze().unsqueeze(0)
         else:
             conv = conv.squeeze()
+        conv = conv.to(device)
 
         # mask = context['roberta_copy_masks']  # [B,K,N]
         # B, N = mask.shape[0], mask.shape[2]
@@ -115,7 +119,8 @@ class BMRelModel(Model):
         im_vec = F.relu(conv)  # [ 512 ]
         c = context['roberta']  # [B, K, N]
         mask = context["roberta_copy_masks"]  # [B, K, N]
-        hiddens = torch.stack([self.roberta.extract_features(p) for p in c])  # [B, K, N, 1024]
+        # hiddens = torch.stack([self.roberta.extract_features(p) for p in c])  # [B, K, N, 1024]
+        hiddens = torch.stack([self.roberta.extract_features(p) for p in c]).to(device)  # [B, K, N, 1024]
         # cshape = c.shape
         # c = c.view(cshape[0] * cshape[1], -1)  # [BK, N]
         # hiddens = self.roberta.extract_features(c).detach().view(cshape+(1024,))  # [B, K, N, 1024]
