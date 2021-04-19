@@ -1,5 +1,5 @@
 dataset_reader:
-  type: BM2Reader
+  type: BMRelReaderFT
   tokenizer:
     type: word
     word_splitter: just_spaces_keep_newlines
@@ -11,7 +11,7 @@ dataset_reader:
       padding_on_right: true
       padding_value: 1
       max_len: 512
-  mongo_host: "nova"
+  mongo_host: "c-006.cs.tau.ac.il"
   image_dir: /a/home/cc/students/cs/shlomotannor/nlp_course/newscaptioning/data/nytimes/images_processed
   lazy: true
   use_caption_names: false
@@ -24,8 +24,7 @@ vocabulary:
   type: roberta
   directory_path: ./expt/vocabulary
 model:
-  type: BM2Model
-  arch: 1
+  type: BMRelModel
   criterion:
     type: adaptive_loss
     padding_idx: 1
@@ -47,18 +46,18 @@ iterator:
   batch_size: 16
   max_instances_in_memory: 8192
   biggest_batch_first: false
-  instances_per_epoch: 1024
-  #instances_per_epoch: 256
-  maximum_samples_per_batch: ["num_tokens", 16384]
+  instances_per_epoch: 2048
+  #  instances_per_epoch: 66536
+  maximum_samples_per_batch: [ "num_tokens", 16384 ]
 validation_iterator:
   type: bucket
   sorting_keys:
     - - caption
       - num_tokens
   batch_size: 16
+  instances_per_epoch: 1024
   max_instances_in_memory: 8192
-  instances_per_epoch: 512
-  maximum_samples_per_batch: ["num_tokens", 16384]
+  maximum_samples_per_batch: [ "num_tokens", 16384 ]
   biggest_batch_first: false
 trainer:
   optimizer: adam

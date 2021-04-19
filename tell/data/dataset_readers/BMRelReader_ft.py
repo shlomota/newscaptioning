@@ -35,8 +35,8 @@ def tokenize_line(line):
     return line.split()
 
 
-@DatasetReader.register('BMRelReader')
-class BMRelReader(DatasetReader):
+@DatasetReader.register('BMRelReaderFT')
+class BMRelReaderFT(DatasetReader):
     """Read from the New York Times dataset.
 
     See the repo README for more instruction on how to download the dataset.

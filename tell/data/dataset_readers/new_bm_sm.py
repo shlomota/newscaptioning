@@ -6,7 +6,9 @@ from typing import Dict
 
 import numpy as np
 import pymongo
+import shutil
 import torch
+from allennlp.data import DataIterator
 from allennlp.data.dataset_readers.dataset_reader import DatasetReader
 from allennlp.data.fields import ArrayField, MetadataField, TextField
 from allennlp.data.instance import Instance
@@ -19,6 +21,8 @@ from torchvision.transforms import Compose, Normalize, ToTensor
 from tqdm import tqdm
 import pandas as pd
 
+from tell.commands.bm_evaluate import get_model_from_file, evaluate
+from tell.commands.train import yaml_to_params
 from tell.data.fields import ImageField, ListTextField
 
 from rank_bm25 import BM25Okapi
@@ -34,8 +38,27 @@ def tokenize_line(line):
     return line.split()
 
 
-@DatasetReader.register('new_bm_sm')
-class NewBMSMReader(DatasetReader):
+CONFIG_PATH = "expt/nytimes/BM2/config.yaml"
+BASE_PATH = "/a/home/cc/students/cs/shlomotannor/nlp_course/newscaptioning/"
+# SERIALIZATION_DIR = os.path.join(BASE_PATH, "expt/nytimes/BM/serialization_sum_good/")
+SERIALIZATION_DIR = os.path.join(BASE_PATH, "expt/nytimes/BM2/serializationarch1_1024_512_100/best.th")
+
+
+# FULL PATH -  /a/home/cc/students/cs/shlomotannor/nlp_course/newscaptioning/expt/nytimes/BM/serialization_1/
+
+
+def get_bmmodel():
+    # print("directory content:", os.listdir(SERIALIZATION_DIR))
+    # shutil.rmtree(SERIALIZATION_DIR)
+    # print("after remove")
+    overrides = """{"vocabulary":
+                     {"type": "roberta",
+                      "directory_path": "./expt/vocabulary"}"""
+    return get_model_from_file(CONFIG_PATH, SERIALIZATION_DIR)
+
+
+@DatasetReader.register('BM2Eval')
+class BM2EvalReader(DatasetReader):
     """Read from the New York Times dataset.
 
     See the repo README for more instruction on how to download the dataset.
@@ -76,8 +99,6 @@ class NewBMSMReader(DatasetReader):
         self.use_caption_names = use_caption_names
         self.use_objects = use_objects
         self.n_faces = n_faces
-        random.seed(1234)
-        self.rs = np.random.RandomState(1234)
 
         roberta = torch.hub.load('pytorch/fairseq:2f7e3f3323', 'roberta.base')
         self.bpe = roberta.bpe
@@ -85,6 +106,7 @@ class NewBMSMReader(DatasetReader):
         self.articles_num = articles_num
         self.use_first = use_first
         self.sort_BM = sort_BM
+        self.model = get_bmmodel()
 
     @overrides
     def _read(self, split: str):
@@ -94,24 +116,35 @@ class NewBMSMReader(DatasetReader):
             raise ValueError(f'Unknown split: {split}')
 
         logger.info('Grabbing all article IDs')
-        sample_cursor = self.db.articles.find({
-            'split': split,
-        }, projection=['_id']).sort('_id', pymongo.ASCENDING)
-        ids = np.array([article['_id'] for article in tqdm(sample_cursor)])
-        sample_cursor.close()
-        self.rs.shuffle(ids)
+
+        # load npy ids
+        base = "/specific/netapp5/joberant/nlp_fall_2021/shlomotannor/newscaptioning/"
+        splitn = ''
+        if split == 'test':
+            splitn = '_test'
+        elif split == 'valid':
+            splitn = '_valid'
+
+        print('split', split)
+
+        ids = np.array([])
+        while not len(ids):  # is someone else reading/writing ? Wait a bit...
+            try:
+                ids = np.load(f"{base}_ids{splitn}.npy")
+
+            except Exception:
+                sleep(1)
+
+        np.random.shuffle(ids)
 
         projection = ['_id', 'parsed_section.type', 'parsed_section.text',
-                      'parsed_section.hash', 'parsed_section.parts_of_speech',
-                      'parsed_section.facenet_details', 'parsed_section.named_entities',
-                      'image_positions', 'headline',
-                      'web_url', 'n_images_with_faces']
+                      'parsed_section.hash', 'image_positions']
         if self.articles_num == -1:
             self.articles_num = len(ids)
 
         print(f'articles num: {self.articles_num}')
-
-        for article_id in ids[:self.articles_num]:
+        #for article_id in ids[:self.articles_num]:
+        for article_id in ids[:10]:
             article = self.db.articles.find_one(
                 {'_id': {'$eq': article_id}}, projection=projection)
             sections = article['parsed_section']
@@ -125,59 +158,9 @@ class NewBMSMReader(DatasetReader):
                 if 'main' in article['headline']:
                     title = article['headline']['main'].strip()
 
-                if title:
-                    paragraphs.append(title)
-                    named_entities.union(
-                        self._get_named_entities(article['headline']))
-                    n_words += len(self.to_token_ids(title))
-
                 caption = sections[pos]['text'].strip()
                 if not caption:
                     continue
-
-                if self.n_faces is not None:
-                    n_persons = self.n_faces
-                elif self.use_caption_names:
-                    n_persons = len(self._get_person_names(sections[pos]))
-                else:
-                    n_persons = 4
-
-                # old way - 1st + around image
-                pi_chosen = []
-                before = []
-                after = []
-                i = pos - 1
-                j = pos + 1
-                for k, section in enumerate(sections):
-                    if section['type'] == 'paragraph':
-                        paragraphs.append(section['text'])
-                        named_entities |= self._get_named_entities(section)
-                        pi_chosen.append(k)
-                        break
-
-                while True:
-                    if i > k and sections[i]['type'] == 'paragraph':
-                        text = sections[i]['text']
-                        before.insert(0, text)
-                        named_entities |= self._get_named_entities(sections[i])
-                        n_words += len(self.to_token_ids(text))
-                        pi_chosen.append(i)
-                    i -= 1
-
-                    if k < j < len(sections) and sections[j]['type'] == 'paragraph':
-                        text = sections[j]['text']
-                        after.append(text)
-                        named_entities |= self._get_named_entities(sections[j])
-                        n_words += len(self.to_token_ids(text))
-                        pi_chosen.append(j)
-                    j += 1
-
-                    if n_words >= 510 or (i <= k and j >= len(sections)):
-                        break
-
-                paragraphs = paragraphs + before + after
-                named_entities = sorted(named_entities)
-                pi_chosen.sort()
 
                 image_path = os.path.join(
                     self.image_dir, f"{sections[pos]['hash']}.jpg")
@@ -186,50 +169,28 @@ class NewBMSMReader(DatasetReader):
                 except (FileNotFoundError, OSError):
                     continue
 
-                if 'facenet_details' not in sections[pos] or n_persons == 0:
-                    face_embeds = np.array([[]])
-                else:
-                    face_embeds = sections[pos]['facenet_details']['embeddings']
-                    # Keep only the top faces (sorted by size)
-                    face_embeds = np.array(face_embeds[:n_persons])
-
-                obj_feats = None
-                if self.use_objects:
-                    obj = self.db.objects.find_one(
-                        {'_id': sections[pos]['hash']})
-                    if obj is not None:
-                        obj_feats = obj['object_features']
-                        if len(obj_feats) == 0:
-                            obj_feats = np.array([[]])
-                        else:
-                            obj_feats = np.array(obj_feats)
-                    else:
-                        obj_feats = np.array([[]])
-
-                '''yield self.article_to_instance(
-                    paragraphs, named_entities, image, caption, image_path,
-                    article['web_url'], pos, face_embeds, obj_feats, image_id, pi_chosen, gen_type=1)
-                '''
-
                 # 'new' way of sending every paragraph
                 paragraphs = [p for p in sections if p['type'] == 'paragraph']
 
-                # todo: restore
-                paragraphs_texts = [p["text"] for p in paragraphs]
-                tokenized_corpus = [doc.split(" ") for doc in paragraphs_texts]
-                bm25 = BM25Okapi(tokenized_corpus)
-                query = caption
-                tokenized_query = query.split(" ")
-                paragraphs_scores = bm25.get_scores(tokenized_query)
+                device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+
+                results = self.model.forward(aid=[article_id], split=[split], label=torch.tensor([1]).to(device),
+                                             image=ImageField(image, self.preprocess))
+                probs = results["probs"]
+
+                print('probs:', probs)
+
+                paragraphs_scores = torch.stack(all_probs).to(device="cpu").numpy()
 
                 df = pd.DataFrame(columns=["paragraph", "score", "i"])
                 df.paragraph = paragraphs
                 df.score = paragraphs_scores
                 df.i = list(range(len(paragraphs)))
-                # df.score = list(range(len(paragraphs)))
+
                 df = df.sort_index(ascending=True)
 
-                if self.sort_BM:
+                #if self.sort_BM:
+                if True:
                     sorted_df = df.sort_values("score", ascending=False)
                     thresh = 0
                     text_count = 0
@@ -250,50 +211,28 @@ class NewBMSMReader(DatasetReader):
 
                 # sort df
                 n_words = 0
-                named_entities = set()
                 sorted_paragraphs = []
                 pi_chosen = []
 
                 if title:
                     sorted_paragraphs.append(title)
-                    named_entities = named_entities.union(
-                        self._get_named_entities(article['headline']))
                     n_words += len(self.to_token_ids(title))
 
-                if self.use_first:
-                    fp = df[df.i == 0]
-                    fp = fp["paragraph"].values.tolist()
-                    if fp:
-                        fp = fp[0]
-                        text = fp["text"]
-                        n_words += len(self.to_token_ids(text))
-                        sorted_paragraphs.append(text)
-                        named_entities |= self._get_named_entities(fp)
-                        pi_chosen.append(0)
-                    else:
-                        print(f"?!{len(paragraphs)}")
-
                 if n_words < 510:
-                    if self.use_first:  # if used 1st paragraph, don't reuse
-                        df = df[df['i'] != 0]
-
                     for p, i in zip(df["paragraph"].values.tolist(), df["i"].values.tolist()):
                         text = p["text"]
                         n_words += len(self.to_token_ids(text))
                         sorted_paragraphs.append(text)
-                        named_entities |= self._get_named_entities(p)
                         pi_chosen.append(i)
                         if n_words >= 510:
                             break
 
-                named_entities = sorted(named_entities)
                 yield self.article_to_instance(
-                    sorted_paragraphs, named_entities, image, caption, image_path,
-                    article['web_url'], pos, face_embeds, obj_feats, image_id, pi_chosen, gen_type=2)
+                    sorted_paragraphs, image, caption, image_path,
+                    pos, image_id, pi_chosen)
 
-    def article_to_instance(self, paragraphs, named_entities, image, caption,
-                            image_path, web_url, pos, face_embeds, obj_feats, image_id, pi_chosen,
-                            gen_type) -> Instance:
+    def article_to_instance(self, paragraphs, image, caption,
+                            image_path, pos, image_id, pi_chosen) -> Instance:
         context = '\n'.join(paragraphs).strip()
 
         context_tokens = self._tokenizer.tokenize(context)
@@ -310,16 +249,13 @@ class NewBMSMReader(DatasetReader):
 
         fields = {
             'context': TextField(context_tokens, self._token_indexers),
-            'names': ListTextField(name_field),
+            #'names': ListTextField(name_field),
             'image': ImageField(image, self.preprocess),
             'caption': TextField(caption_tokens, self._token_indexers),
-            'face_embeds': ArrayField(face_embeds, padding_value=np.nan),
+            #'face_embeds': ArrayField(face_embeds, padding_value=np.nan),
         }
 
-        if obj_feats is not None:
-            fields['obj_embeds'] = ArrayField(obj_feats, padding_value=np.nan)
-
-        metadata = {'context': context,
+        '''metadata = {'context': context,
                     'caption': caption,
                     'names': named_entities,
                     'web_url': web_url,
@@ -328,7 +264,57 @@ class NewBMSMReader(DatasetReader):
                     'pi_chosen': pi_chosen,
                     'gen_type': gen_type,
                     'image_id': image_id}
-        fields['metadata'] = MetadataField(metadata)
+        fields['metadata'] = MetadataField(metadata)'''
+
+        return Instance(fields)
+
+    # RON - TODO. Bad habit copied from BMReader (in the optimal case - we will call a general function, instead of copy it to here)
+    def article_to_bm_instance(self, paragraph, paragraph_score, named_entities, image, caption,
+                               image_path, web_url, pos, face_embeds, obj_feats, image_id) -> Instance:
+        # context = ' BLABLA '.join([p["text"] for p in paragraphs]).strip()
+        context = paragraph
+
+        # context_tokens = [self._tokenizer.tokenize(p["text"]) for p in paragraphs]
+        # context_tokens = [self._tokenizer.tokenize(p["text"]) for p in paragraphs]
+        context_tokens = self._tokenizer.tokenize(context)
+        caption_tokens = self._tokenizer.tokenize(caption)
+        #name_token_list = [self._tokenizer.tokenize(n["text"]) for n in named_entities]
+
+        '''if name_token_list:
+            name_field = [TextField(tokens, self._token_indexers)
+                          for tokens in name_token_list]
+        else:
+            stub_field = ListTextField(
+                [TextField(caption_tokens, self._token_indexers)])
+            name_field = stub_field.empty_field()'''
+
+        context = TextField(context_tokens, self._token_indexers)
+        context.index(self.model.vocab)
+        context = context.as_tensor(context.get_padding_lengths())
+        fields = {
+            'context': context,
+            # 'context': ListTextField([TextField(p, self._token_indexers) for p in context_tokens]),
+            # 'context': ListTextField(context_tokens),
+            'names': ListTextField(name_field),
+            'image': ImageField(image, self.preprocess),
+            'caption': TextField(caption_tokens, self._token_indexers),
+            #'face_embeds': ArrayField(face_embeds, padding_value=np.nan),
+            'label': ArrayField(np.array([paragraph_score]))
+            # 'labels': ArrayField(paragraphs_score)
+        }
+
+        '''if obj_feats is not None:
+            fields['obj_embeds'] = ArrayField(obj_feats, padding_value=np.nan)'''
+
+        '''metadata = {'context': context,
+                    'caption': caption,
+                    'names': named_entities,
+                    'web_url': web_url,
+                    'image_path': image_path,
+                    'image_pos': pos,
+                    'image_id': image_id,
+                    'label': paragraph_score}
+        fields['metadata'] = MetadataField(metadata)'''
 
         return Instance(fields)
 
