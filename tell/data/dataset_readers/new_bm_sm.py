@@ -41,7 +41,7 @@ def tokenize_line(line):
 CONFIG_PATH = "expt/nytimes/BM2/config.yaml"
 BASE_PATH = "/a/home/cc/students/cs/shlomotannor/nlp_course/newscaptioning/"
 # SERIALIZATION_DIR = os.path.join(BASE_PATH, "expt/nytimes/BM/serialization_sum_good/")
-SERIALIZATION_DIR = os.path.join(BASE_PATH, "expt/nytimes/BM2/serializationarch1_1024_512_100/best.th")
+SERIALIZATION_DIR = os.path.join(BASE_PATH, "expt/nytimes/BM2/serializationNarch1_1024_512_100/best.th")
 
 
 # FULL PATH -  /a/home/cc/students/cs/shlomotannor/nlp_course/newscaptioning/expt/nytimes/BM/serialization_1/
@@ -138,15 +138,17 @@ class BM2EvalReader(DatasetReader):
         np.random.shuffle(ids)
 
         projection = ['_id', 'parsed_section.type', 'parsed_section.text',
-                      'parsed_section.hash', 'image_positions']
+                      'parsed_section.hash', 'parsed_section.parts_of_speech',
+                      'parsed_section.facenet_details', 'parsed_section.named_entities',
+                      'image_positions', 'headline',
+                      'web_url', 'n_images_with_faces']
         if self.articles_num == -1:
             self.articles_num = len(ids)
 
         print(f'articles num: {self.articles_num}')
         #for article_id in ids[:self.articles_num]:
-        for article_id in ids[:10]:
-            article = self.db.articles.find_one(
-                {'_id': {'$eq': article_id}}, projection=projection)
+        for article_id in ids[:self.articles_num]:
+            article = self.db.articles.find_one( {'_id': {'$eq': article_id}}, projection=projection)
             sections = article['parsed_section']
             image_positions = article['image_positions']
             for pos in image_positions:
@@ -158,9 +160,22 @@ class BM2EvalReader(DatasetReader):
                 if 'main' in article['headline']:
                     title = article['headline']['main'].strip()
 
+                if title:
+                    paragraphs.append(title)
+                    named_entities.union(
+                        self._get_named_entities(article['headline']))
+                    n_words += len(self.to_token_ids(title))
+
                 caption = sections[pos]['text'].strip()
                 if not caption:
                     continue
+
+                if self.n_faces is not None:
+                    n_persons = self.n_faces
+                elif self.use_caption_names:
+                    n_persons = len(self._get_person_names(sections[pos]))
+                else:
+                    n_persons = 4
 
                 image_path = os.path.join(
                     self.image_dir, f"{sections[pos]['hash']}.jpg")
@@ -169,18 +184,42 @@ class BM2EvalReader(DatasetReader):
                 except (FileNotFoundError, OSError):
                     continue
 
+                if 'facenet_details' not in sections[pos] or n_persons == 0:
+                    face_embeds = np.array([[]])
+                else:
+                    face_embeds = sections[pos]['facenet_details']['embeddings']
+                    # Keep only the top faces (sorted by size)
+                    face_embeds = np.array(face_embeds[:n_persons])
+
+                obj_feats = None
+                if self.use_objects:
+                    obj = self.db.objects.find_one(
+                        {'_id': sections[pos]['hash']})
+                    if obj is not None:
+                        obj_feats = obj['object_features']
+                        if len(obj_feats) == 0:
+                            obj_feats = np.array([[]])
+                        else:
+                            obj_feats = np.array(obj_feats)
+                    else:
+                        obj_feats = np.array([[]])
+
                 # 'new' way of sending every paragraph
                 paragraphs = [p for p in sections if p['type'] == 'paragraph']
 
                 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
+                iff = ImageField(image, self.preprocess)
+                iff = iff.as_tensor(iff.get_padding_lengths()).unsqueeze(0)
+                iff = iff.to(device)
+
                 results = self.model.forward(aid=[article_id], split=[split], label=torch.tensor([1]).to(device),
-                                             image=ImageField(image, self.preprocess))
+                                             image=iff)
                 probs = results["probs"]
 
                 print('probs:', probs)
 
-                paragraphs_scores = torch.stack(all_probs).to(device="cpu").numpy()
+                paragraphs_scores = torch.stack(probs).to(device="cpu").numpy()
 
                 df = pd.DataFrame(columns=["paragraph", "score", "i"])
                 df.paragraph = paragraphs
@@ -211,28 +250,49 @@ class BM2EvalReader(DatasetReader):
 
                 # sort df
                 n_words = 0
+                named_entities = set()
                 sorted_paragraphs = []
                 pi_chosen = []
 
                 if title:
                     sorted_paragraphs.append(title)
+                    named_entities = named_entities.union(
+                        self._get_named_entities(article['headline']))
                     n_words += len(self.to_token_ids(title))
 
+                if self.use_first:
+                    fp = df[df.i == 0]
+                    fp = fp["paragraph"].values.tolist()
+                    if fp:
+                        fp = fp[0]
+                        text = fp["text"]
+                        n_words += len(self.to_token_ids(text))
+                        sorted_paragraphs.append(text)
+                        named_entities |= self._get_named_entities(fp)
+                        pi_chosen.append(0)
+                    else:
+                        print(f"?!{len(paragraphs)}")
+
                 if n_words < 510:
+                    if self.use_first:  # if used 1st paragraph, don't reuse
+                        df = df[df['i'] != 0]
+
                     for p, i in zip(df["paragraph"].values.tolist(), df["i"].values.tolist()):
                         text = p["text"]
                         n_words += len(self.to_token_ids(text))
                         sorted_paragraphs.append(text)
+                        named_entities |= self._get_named_entities(p)
                         pi_chosen.append(i)
                         if n_words >= 510:
                             break
 
+                named_entities = sorted(named_entities)
                 yield self.article_to_instance(
-                    sorted_paragraphs, image, caption, image_path,
-                    pos, image_id, pi_chosen)
+                    sorted_paragraphs, named_entities, image, caption, image_path,
+                    article['web_url'], pos, face_embeds, obj_feats, image_id, pi_chosen)
 
-    def article_to_instance(self, paragraphs, image, caption,
-                            image_path, pos, image_id, pi_chosen) -> Instance:
+    def article_to_instance(self, paragraphs, named_entities, image, caption,
+                            image_path, pos, face_embeds, image_id, pi_chosen) -> Instance:
         context = '\n'.join(paragraphs).strip()
 
         context_tokens = self._tokenizer.tokenize(context)
@@ -249,13 +309,16 @@ class BM2EvalReader(DatasetReader):
 
         fields = {
             'context': TextField(context_tokens, self._token_indexers),
-            #'names': ListTextField(name_field),
+            'names': ListTextField(name_field),
             'image': ImageField(image, self.preprocess),
             'caption': TextField(caption_tokens, self._token_indexers),
-            #'face_embeds': ArrayField(face_embeds, padding_value=np.nan),
+            'face_embeds': ArrayField(face_embeds, padding_value=np.nan),
         }
 
-        '''metadata = {'context': context,
+        if obj_feats is not None:
+            fields['obj_embeds'] = ArrayField(obj_feats, padding_value=np.nan)
+
+        metadata = {'context': context,
                     'caption': caption,
                     'names': named_entities,
                     'web_url': web_url,
@@ -264,7 +327,7 @@ class BM2EvalReader(DatasetReader):
                     'pi_chosen': pi_chosen,
                     'gen_type': gen_type,
                     'image_id': image_id}
-        fields['metadata'] = MetadataField(metadata)'''
+        fields['metadata'] = MetadataField(metadata)
 
         return Instance(fields)
 
