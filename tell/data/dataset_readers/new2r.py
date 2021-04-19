@@ -40,14 +40,22 @@ def tokenize_line(line):
 
 CONFIG_PATH = "expt/nytimes/BM/config.yaml"
 BASE_PATH = "/a/home/cc/students/cs/shlomotannor/nlp_course/newscaptioning/"
-SERIALIZATION_DIR = os.path.join(BASE_PATH, "expt/nytimes/BM/serialization")
+# SERIALIZATION_DIR = os.path.join(BASE_PATH, "expt/nytimes/BM/serialization_sum_good/")
+SERIALIZATION_DIR = os.path.join(BASE_PATH, "expt/nytimes/BM/serialization_sum_good/best.th")
+
+
+# FULL PATH -  /a/home/cc/students/cs/shlomotannor/nlp_course/newscaptioning/expt/nytimes/BM/serialization_1/
 
 
 def get_bmmodel():
-    print("directory content:", os.listdir(SERIALIZATION_DIR))
-    shutil.rmtree(SERIALIZATION_DIR)
-    print("after remove")
+    # print("directory content:", os.listdir(SERIALIZATION_DIR))
+    # shutil.rmtree(SERIALIZATION_DIR)
+    # print("after remove")
+    overrides = """{"vocabulary":
+                     {"type": "roberta",
+                      "directory_path": "./expt/vocabulary"}"""
     return get_model_from_file(CONFIG_PATH, SERIALIZATION_DIR)
+
 
 @DatasetReader.register('new2r')
 class NewReader2R(DatasetReader):
@@ -126,7 +134,6 @@ class NewReader2R(DatasetReader):
             self.articles_num = len(ids)
 
         print(f'articles num: {self.articles_num}')
-        self.articles_num = 20
         for article_id in ids[:self.articles_num]:
             article = self.db.articles.find_one(
                 {'_id': {'$eq': article_id}}, projection=projection)
@@ -166,7 +173,7 @@ class NewReader2R(DatasetReader):
                 j = pos + 1
                 for k, section in enumerate(sections):
                     if section['type'] == 'paragraph':
-                        paragraphs.append(section['text'])
+                        paragraphs.append(section['textnew2r'])
                         named_entities |= self._get_named_entities(section)
                         pi_chosen.append(k)
                         break
@@ -231,18 +238,34 @@ class NewReader2R(DatasetReader):
                 paragraphs = [p for p in sections if p['type'] == 'paragraph']
 
                 # todo: restore
-                paragraphs_texts = [p["text"] for p in paragraphs]
-                tokened = [self._tokenizer.tokenize(paragraphs_texts[0])]
-                test_field = TextField(tokened, self._token_indexers)
-                tokenized_corpus = [doc.split(" ") for doc in paragraphs_texts]
+                # paragraphs_texts = [p["text"] for p in paragraphs]
+                # tokened = [self._tokenizer.tokenize(paragraphs_texts[0])]
+                # test_field = TextField(tokened, self._token_indexers)
+                # tokenized_corpus = [doc.split(" ") for doc in paragraphs_texts]
 
-                results = self.model.forward(context=[test_field], label=torch.tensor([[1]]),
-                                             image=ImageField(image, self.preprocess))
-                print("\n\nRESULTS:\n\n", results)
-                bm25 = BM25Okapi(tokenized_corpus)
-                query = caption
-                tokenized_query = query.split(" ")
-                paragraphs_scores = bm25.get_scores(tokenized_query)
+                # RON - TODO - Remember that I stopped here - this is model.forward, and we need the results
+                fields = []
+                for p in paragraphs:
+                    fields.append(
+                        self.article_to_bm_instance(p["text"], None, p["named_entities"], image, "a a", image_path,
+                                                    None, None, None, None, None).fields)
+                all_probs = []
+                for p in fields:
+                    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+                    img = p["image"].image.unsqueeze(0).to(device)
+                    p["context"]["roberta"] = p["context"]["roberta"].unsqueeze(0)
+
+                    results = self.model.forward(context=p["context"], label=torch.tensor([1]).to(device),
+                                                 image=img, caption=p["caption"], face_embeds=torch.tensor([[1]]),
+                                                 obj_embeds=torch.tensor([[1]]), metadata=[])
+                    all_probs.append(results["probs"])
+                paragraphs_scores = torch.stack(all_probs).to(device="cpu").numpy()
+                # print(f"\n\nRESULTS:{results['loss']}\n=========\nSHAPE:{results['probs'].shape}\n", results)
+                # bm25 = BM25Okapi(tokenized_corpus)
+                # query = caption
+                # tokenized_query = query.split(" ")
+                # paragraphs_scores = bm25.get_scores(tokenized_query)
+
 
                 df = pd.DataFrame(columns=["paragraph", "score", "i"])
                 df.paragraph = paragraphs
@@ -350,6 +373,56 @@ class NewReader2R(DatasetReader):
                     'pi_chosen': pi_chosen,
                     'gen_type': gen_type,
                     'image_id': image_id}
+        fields['metadata'] = MetadataField(metadata)
+
+        return Instance(fields)
+
+    # RON - TODO. Bad habit copied from BMReader (in the optimal case - we will call a general function, instead of copy it to here)
+    def article_to_bm_instance(self, paragraph, paragraph_score, named_entities, image, caption,
+                               image_path, web_url, pos, face_embeds, obj_feats, image_id) -> Instance:
+        # context = ' BLABLA '.join([p["text"] for p in paragraphs]).strip()
+        context = paragraph
+
+        # context_tokens = [self._tokenizer.tokenize(p["text"]) for p in paragraphs]
+        # context_tokens = [self._tokenizer.tokenize(p["text"]) for p in paragraphs]
+        context_tokens = self._tokenizer.tokenize(context)
+        caption_tokens = self._tokenizer.tokenize(caption)
+        name_token_list = [self._tokenizer.tokenize(n["text"]) for n in named_entities]
+
+        if name_token_list:
+            name_field = [TextField(tokens, self._token_indexers)
+                          for tokens in name_token_list]
+        else:
+            stub_field = ListTextField(
+                [TextField(caption_tokens, self._token_indexers)])
+            name_field = stub_field.empty_field()
+
+        context = TextField(context_tokens, self._token_indexers)
+        context.index(self.model.vocab)
+        context = context.as_tensor(context.get_padding_lengths())
+        fields = {
+            'context': context,
+            # 'context': ListTextField([TextField(p, self._token_indexers) for p in context_tokens]),
+            # 'context': ListTextField(context_tokens),
+            'names': ListTextField(name_field),
+            'image': ImageField(image, self.preprocess),
+            'caption': TextField(caption_tokens, self._token_indexers),
+            'face_embeds': ArrayField(face_embeds, padding_value=np.nan),
+            'label': ArrayField(np.array([paragraph_score]))
+            # 'labels': ArrayField(paragraphs_score)
+        }
+
+        if obj_feats is not None:
+            fields['obj_embeds'] = ArrayField(obj_feats, padding_value=np.nan)
+
+        metadata = {'context': context,
+                    'caption': caption,
+                    'names': named_entities,
+                    'web_url': web_url,
+                    'image_path': image_path,
+                    'image_pos': pos,
+                    'image_id': image_id,
+                    'label': paragraph_score}
         fields['metadata'] = MetadataField(metadata)
 
         return Instance(fields)

@@ -108,7 +108,12 @@ class BMModel(Model):
 
         # stage 1: use only resnet of image and roberta of text (and linear layers)
         im = self.resnet(image).detach()
-        im_vec = self.relu(self.conv(im).squeeze())
+        conv = self.conv(im)
+        if conv.shape[0] == 1:
+            conv = conv[0].squeeze().unsqueeze(0)
+        else:
+            conv = conv.squeeze()
+        im_vec = self.relu(conv)
         hiddens = self.roberta.extract_features(context["roberta"]).detach()
         # using only first and last hidden because size can change
         # h = torch.cat([hiddens[:,0,:], hiddens[:,-1,:]], dim=-1)
@@ -119,6 +124,10 @@ class BMModel(Model):
         # scores = torch.tensor([im @ p for p in split_context])
         score = torch.bmm(text_vec.unsqueeze(1), im_vec.unsqueeze(-1)).squeeze()
         # sm_scores = nn.Softmax()(scores) #use torch nn
+
+        # During evaluation...
+        if not self.training and self.evaluate_mode:
+            label = score
 
         loss = self.loss_func(score, label)
         # loss = nn.CrossEntropyLoss(scores, labels)
@@ -134,9 +143,6 @@ class BMModel(Model):
             'probs': score
         }
 
-        # During evaluation...
-        if not self.training and self.evaluate_mode:
-            pass
 
         self.n_batches += 1
 

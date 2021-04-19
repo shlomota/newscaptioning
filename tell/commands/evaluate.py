@@ -76,8 +76,15 @@ def evaluate_from_file(archive_path, model_path, overrides=None, eval_suffix='',
     output_file = os.path.join(
         serialization_dir, f"evaluate-metrics3{eval_suffix}.json")
     if output_file:
-        with open(output_file, "w") as file:
-            json.dump(metrics, file, indent=4)
+        try:
+            with open(output_file, "w") as file:
+                json.dump(metrics, file, indent=4)
+        except FileNotFoundError as file_not_found:
+            print(file_not_found)
+            with open(f"evaluate-metrics3{eval_suffix}.json", "w") as file:
+                json.dump(metrics, file, indent=4)
+                print(f"Written eval metrics to {os.path.curdir}")
+
     return metrics
 
 
@@ -168,10 +175,11 @@ def evaluate(model: Model,
             #     raise RuntimeError("The model you are trying to evaluate only sometimes " +
             #                        "produced a loss!")
             final_metrics["loss"] = total_loss / total_weight
-
-    if not os.path.exists(cache_path):
-        with open(cache_path, 'wb') as f:
-            pickle.dump(cache, f)
+            print(f"LOSS:{final_metrics['loss']}")
+    #
+    # if not os.path.exists(cache_path):
+    #     with open(cache_path, 'wb') as f:
+    #         pickle.dump(cache, f)
 
     return final_metrics
 
