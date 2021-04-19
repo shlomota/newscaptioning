@@ -55,6 +55,7 @@ class BM2Model(Model):
                  arch: int = 0,
                  initializer: InitializerApplicator = InitializerApplicator()) -> None:
         super().__init__(vocab)
+        self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
         # self.criterion = criterion
         self.criterion = nn.KLDivLoss()
 
@@ -79,10 +80,10 @@ class BM2Model(Model):
         print("arch", self.arch)
 
         if self.arch in [0]:
-            self.linear = nn.Linear(1024, 512)
+            self.linear = nn.Linear(1024, 512).to(self.device)
         else:
-            self.linear = nn.Linear(1024, 768)
-            self.linear2 = nn.Linear(768, 512)
+            self.linear = nn.Linear(1024, 768).to(self.device)
+            self.linear2 = nn.Linear(768, 512).to(self.device)
 
         if weigh_bert:
             self.bert_weight = nn.Parameter(torch.Tensor(25))
@@ -140,8 +141,8 @@ class BM2Model(Model):
         # c = context['roberta']  # [B, K, N]
         # hiddens = torch.stack([self.roberta.extract_features(p).detach() for p in c])  # [B, K, N, 1024]
 
-        c = [torch.load(f"{self.dbr}{dbrf}/{i}") for i in aid]
-        m = [torch.load(f"{self.dbr}{dbrf}/{i}m") for i in aid]
+        c = [torch.load(f"{self.dbr}{dbrf}/{i}", map_location=self.device) for i in aid]
+        m = [torch.load(f"{self.dbr}{dbrf}/{i}m", map_location=self.device) for i in aid]
         m = [torch.add(i.unsqueeze(-1).expand(*i.shape, 1024), 1) for i in m]
         #m = [i.bool() for i in m]
 
@@ -150,7 +151,7 @@ class BM2Model(Model):
         cshapes = torch.tensor([cv.shape[0] for cv in c])
         c = torch.nn.utils.rnn.pad_sequence(c, batch_first=True)  # [B, N, 1024]
 
-        print(c.device)
+        assert c.device == self.device
 
         #torch.save(c, '/a/home/cc/students/cs/shlomotannor/nlp_course/newscaptioning/c.pt')
 

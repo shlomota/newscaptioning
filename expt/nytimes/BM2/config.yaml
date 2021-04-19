@@ -62,4 +62,4 @@ validation_iterator:
   biggest_batch_first: false
 trainer:
   optimizer: adam
-  num_epochs: 100
+  num_epochs: 1
