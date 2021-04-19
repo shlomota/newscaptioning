@@ -5,9 +5,9 @@ import shutil
 
 TAT_FOLDER = "/specific/netapp5/joberant/nlp_fall_2021/shlomotannor/newscaptioning/"
 OUTS_FOLDER = "outs"
-model = "11_new2"
+model = "15_bm_rel_model"
 
-YAML = f"expt/nytimes/{model}/config_bmreader.yaml"
+YAML = f"expt/nytimes/{model}/config.yaml"
 YAML = os.path.join(TAT_FOLDER, YAML)
 # expt/nytimes/BM/serialization_sum_good/best.th
 SER = f"expt/nytimes/{model}/serialization/best.th"
