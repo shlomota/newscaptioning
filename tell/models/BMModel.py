@@ -81,32 +81,33 @@ class BMModel(Model):
         self.n_samples = 0
         self.sample_history = {}
 
+        self.dbr = "/specific/netapp5/joberant/nlp_fall_2021/shlomotannor/newscaptioning/dbr/"
+
         initializer(self)
 
     def forward(self,  # type: ignore
-                context: Dict[str, torch.LongTensor],
+                aid: List[str],
+                split: List[str],
+                index: torch.Tensor,
                 label: torch.Tensor,
                 image: torch.Tensor,
                 caption: Dict[str, torch.LongTensor],
-                face_embeds: torch.Tensor,
-                obj_embeds: torch.Tensor,
-                metadata: List[Dict[str, Any]],
-                names: Dict[str, torch.LongTensor] = None,
+                # face_embeds: torch.Tensor,
+                # obj_embeds: torch.Tensor,
+                # metadata: List[Dict[str, Any]],
+                # names: Dict[str, torch.LongTensor] = None,
                 attn_idx=None) -> Dict[str, torch.Tensor]:
 
-        #TODO: understand shape of context, what is roberta/roberta_copy_masks, why are labels identical (perhaps because there's only one example?)
-        #todo: make text not go through roberta before
-        # print("context: ", context)
-        # print("image: ", image)
-        # print("face_embeds: ", face_embeds)
-        # print("obj_embeds: ", obj_embeds)
-        # print("names: ", names)
-        # print("labels: ", label)
+        # aid = [hex(int("".join(map(str, map(int, i)))))[2:] for i in aid]  # [B]
 
-        # split_context = split_list(context["roberta"], "BLABLA")
-        # assert len(split_context) == len(labels)
+        split = split[0]
 
-        # stage 1: use only resnet of image and roberta of text (and linear layers)
+        dbrf = ''
+        a = 1
+        if split == 'test' or split == 'valid':
+            dbrf = split
+
+        label = label.squeeze()
         im = self.resnet(image).detach()
         conv = self.conv(im)
         if conv.shape[0] == 1:
@@ -114,9 +115,16 @@ class BMModel(Model):
         else:
             conv = conv.squeeze()
         im_vec = self.relu(conv)
-        hiddens = self.roberta.extract_features(context["roberta"]).detach()
+        # hiddens = self.roberta.extract_features(context["roberta"]).detach()
+
+        hiddens = [torch.load(f"{self.dbr}{dbrf}/{id}")[index[i]] for i, id in enumerate(aid)]
+        masks = [torch.load(f"{self.dbr}{dbrf}/{id}m")[index[i]] for i, id in enumerate(aid)]
+        m = [torch.add(i.unsqueeze(-1).expand(*i.shape, 1024), 1) for i in masks]
+        # hiddens = self.roberta.extract_features(context["roberta"]).detach()
+
         # using only first and last hidden because size can change
         # h = torch.cat([hiddens[:,0,:], hiddens[:,-1,:]], dim=-1)
+        hiddens = torch.nn.utils.rnn.pad_sequence(hiddens, batch_first=True)
         h = torch.mean(hiddens, dim=1)
         text_vec = self.relu(self.linear(h))
 
@@ -147,5 +155,3 @@ class BMModel(Model):
         self.n_batches += 1
 
         return output_dict
-
-

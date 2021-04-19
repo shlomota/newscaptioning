@@ -19,7 +19,6 @@ G_JSONL = os.path.join(TAT_FOLDER, G_JSONL)
 
 # if os.path.exists(G_JSONL):
 #     os.remove(G_JSONL)
-
 eff(YAML, SER, device=0)
 
 now = datetime.datetime.now()

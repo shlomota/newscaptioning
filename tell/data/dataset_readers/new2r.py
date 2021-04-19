@@ -247,7 +247,7 @@ class NewReader2R(DatasetReader):
                 fields = []
                 for p in paragraphs:
                     fields.append(
-                        self.article_to_bm_instance(p["text"], None, p["named_entities"], image, "a a", image_path,
+                        self.article_to_bm_instance(p["text"], None, p["named_entities"], image, "FAKE CAPTION", image_path,
                                                     None, None, None, None, None).fields)
                 all_probs = []
                 for p in fields:

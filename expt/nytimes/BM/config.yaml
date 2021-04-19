@@ -11,7 +11,7 @@ dataset_reader:
       padding_on_right: true
       padding_value: 1
       max_len: 512
-  mongo_host: "nova"
+  mongo_host: "c-006.cs.tau.ac.il"
   image_dir: /a/home/cc/students/cs/shlomotannor/nlp_course/newscaptioning/data/nytimes/images_processed
   lazy: true
   use_caption_names: false
@@ -35,29 +35,29 @@ model:
   index: roberta
   weigh_bert: true
   padding_value: 1
+vocabulary:
+  type: roberta
+  directory_path: ./expt/vocabulary
 iterator:
   type: bucket
   sorting_keys:
-    - - context
-      - num_tokens
     - - caption
       - num_tokens
   batch_size: 16
   max_instances_in_memory: 8192
   biggest_batch_first: false
-  instances_per_epoch: 1024
+  instances_per_epoch: 8192
   maximum_samples_per_batch: ["num_tokens", 16384]
 validation_iterator:
   type: bucket
   sorting_keys:
-    - - context
-      - num_tokens
     - - caption
       - num_tokens
   batch_size: 16
   max_instances_in_memory: 8192
   maximum_samples_per_batch: ["num_tokens", 16384]
   biggest_batch_first: false
+  instances_per_epoch: 2048
 trainer:
   optimizer: adam
-  num_epochs: 1
+  num_epochs: 100
