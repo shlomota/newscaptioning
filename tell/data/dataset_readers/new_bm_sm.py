@@ -57,7 +57,7 @@ def get_bmmodel():
     return get_model_from_file(CONFIG_PATH, SERIALIZATION_DIR)
 
 
-@DatasetReader.register('BM2Eval')
+@DatasetReader.register('new_bm_sm')
 class BM2EvalReader(DatasetReader):
     """Read from the New York Times dataset.
 
@@ -87,7 +87,6 @@ class BM2EvalReader(DatasetReader):
                  use_first: bool = True,
                  sort_BM: bool = False) -> None:
         super().__init__(lazy)
-        print(mongo_host)
         self._tokenizer = tokenizer
         self._token_indexers = token_indexers
         self.client = MongoClient(host=mongo_host, port=mongo_port)
@@ -213,13 +212,14 @@ class BM2EvalReader(DatasetReader):
                 iff = iff.as_tensor(iff.get_padding_lengths()).unsqueeze(0)
                 iff = iff.to(device)
 
-                results = self.model.forward(aid=[article_id], split=[split], label=torch.tensor([1]).to(device),
-                                             image=iff)
-                probs = results["probs"]
+                print(article_id)
+
+                results = self.model.forward(aid=[article_id], split=[split], label=torch.ones((1, len(paragraphs))).to(device), image=iff, caption=torch.tensor([1]))
+                probs = torch.exp(results["probs"])
 
                 print('probs:', probs)
 
-                paragraphs_scores = torch.stack(probs).to(device="cpu").numpy()
+                paragraphs_scores = probs.squeeze(0).to(device="cpu").numpy()
 
                 df = pd.DataFrame(columns=["paragraph", "score", "i"])
                 df.paragraph = paragraphs
@@ -325,7 +325,6 @@ class BM2EvalReader(DatasetReader):
                     'image_path': image_path,
                     'image_pos': pos,
                     'pi_chosen': pi_chosen,
-                    'gen_type': gen_type,
                     'image_id': image_id}
         fields['metadata'] = MetadataField(metadata)
 
