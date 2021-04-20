@@ -9,9 +9,7 @@ model = "15_bm_rel_model"
 
 YAML = f"expt/nytimes/{model}/config.yaml"
 YAML = os.path.join(TAT_FOLDER, YAML)
-# expt/nytimes/BM/serialization_sum_good/best.th
 SER = f"expt/nytimes/{model}/serialization/best.th"
-# SER = "expt/nytimes/{}/serialization_sum_good/best.th".format(model)
 SER = os.path.join(TAT_FOLDER, SER)
 
 G_JSONL = f"expt/nytimes/{model}/serialization/generations.jsonl"

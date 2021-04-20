@@ -217,6 +217,7 @@ class NewBMRelReader(DatasetReader):
 
                 iff = ImageField(image, self.preprocess)
                 iff = iff.as_tensor(iff.get_padding_lengths()).unsqueeze(0)
+                iff = torch.stack([iff] * len(paragraphs), dim=0).squeeze()
                 iff = iff.to(device)
 
                 results = self.model.forward(aid=[article_id] * len(paragraphs), index1=range(len(paragraphs)),
