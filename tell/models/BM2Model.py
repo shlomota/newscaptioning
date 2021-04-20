@@ -151,7 +151,6 @@ class BM2Model(Model):
 
         cshapes = torch.tensor([cv.shape[0] for cv in c])
         c = torch.nn.utils.rnn.pad_sequence(c, batch_first=True).to(self.device)  # [B, N, 1024]
-        
         #torch.save(c, '/a/home/cc/students/cs/shlomotannor/nlp_course/newscaptioning/c.pt')
 
         #c = (torch.arange(c.size(1)) < cshapes[..., None]).unsqueeze(-1).repeat(1, 1, 1024) * c
