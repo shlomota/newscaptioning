@@ -18,8 +18,5 @@ from .new_bm_sm import BM2EvalReader
 from .new_bm_rel import NewBMRelReader
 from .BMRelReader_ft import BMRelReaderFT
 from .new_bm_model import NewBMModelReader
-<<<<<<< HEAD
-=======
 from .new_noloc import NewNolocReader
 from .new_rand import NewRandReader
->>>>>>> 39dd8af09725e58c5d0d9b7f6c44544739ca8a2c
