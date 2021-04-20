@@ -72,9 +72,11 @@ def evaluate_from_file(archive_path, model_path, overrides=None, eval_suffix='',
     logger.info("Metrics:")
     for key, metric in metrics.items():
         logger.info("%s: %s", key, metric)
+        print("%s: %s", key, metric)
 
     output_file = os.path.join(
         serialization_dir, f"evaluate-metrics3{eval_suffix}.json")
+    print(metrics)
     if output_file:
         try:
             with open(output_file, "w") as file:
@@ -98,8 +100,9 @@ def evaluate(model: Model,
     print("inst", type(instances), dir(instances), instances)
     check_for_gpu(cuda_device)
     nlp = spacy.load("en_core_web_lg")
-    assert not os.path.exists(os.path.join(
-        serialization_dir, f'generations{eval_suffix}.jsonl'))
+    gens = os.path.join(
+        serialization_dir, f'generations{eval_suffix}.jsonl')
+    # assert not os.path.exists(gens)
 
     # caching saves us extra 30 minutes
     if 'goodnews' in serialization_dir:

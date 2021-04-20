@@ -17,3 +17,4 @@ from .new_bm import NewBMReader
 from .new_bm_sm import BM2EvalReader
 from .new_bm_rel import NewBMRelReader
 from .BMRelReader_ft import BMRelReaderFT
+from .new_bm_model import NewBMModelReader

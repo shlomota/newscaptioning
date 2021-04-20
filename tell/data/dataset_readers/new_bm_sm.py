@@ -41,7 +41,7 @@ def tokenize_line(line):
 CONFIG_PATH = "expt/nytimes/BM2/config.yaml"
 BASE_PATH = "/a/home/cc/students/cs/shlomotannor/nlp_course/newscaptioning/"
 # SERIALIZATION_DIR = os.path.join(BASE_PATH, "expt/nytimes/BM/serialization_sum_good/")
-SERIALIZATION_DIR = os.path.join(BASE_PATH, "expt/nytimes/BM2/serializationNarch1_1024_512_100/best.th")
+SERIALIZATION_DIR = os.path.join(BASE_PATH, "expt/nytimes/BM2/serializationNarch2_1024_512_100/best.th")
 
 
 # FULL PATH -  /a/home/cc/students/cs/shlomotannor/nlp_course/newscaptioning/expt/nytimes/BM/serialization_1/
