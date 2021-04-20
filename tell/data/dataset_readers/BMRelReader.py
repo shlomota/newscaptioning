@@ -105,6 +105,7 @@ class BMRelReader(DatasetReader):
         while not len(ids):  # is someone else reading/writing ? Wait a bit...
             try:
                 ids = np.load(f"{base}_ids{splitn}.npy")
+                ids = ids[:1]
 
             except Exception:
                 sleep(1)
