@@ -84,6 +84,8 @@ class BMRelModel(Model):
         self.n_samples = 0
         self.sample_history = {}
 
+        self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+
         self.dbr = "/specific/netapp5/joberant/nlp_fall_2021/shlomotannor/newscaptioning/dbr/"
 
         initializer(self)
@@ -138,8 +140,8 @@ class BMRelModel(Model):
         # m = [i.bool() for i in m]
 
         hiddens = [torch.sum(cv * masks[ci], dim=1) / torch.sum(masks[ci], dim=1) for ci, cv in enumerate(hiddens)]
-        hiddens = torch.nn.utils.rnn.pad_sequence(hiddens, batch_first=True)  # [B, N, 1024]
-        h = torch.stack([hiddens[i, [index1[i], index2[i]], :] for i in range(len(index1))])
+        hiddens = torch.nn.utils.rnn.pad_sequence(hiddens, batch_first=True).to(self.device)  # [B, N, 1024]
+        h = torch.stack([hiddens[i, [index1[i], index2[i]], :] for i in range(len(index1))]).to(self.device)
 
         # masks = torch.nn.utils.rnn.pad_sequence(masks, batch_first=True)
         # # masks = torch.stack(masks)

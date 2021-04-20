@@ -150,7 +150,8 @@ class NewBMRelReader(DatasetReader):
 
         print(f'articles num: {self.articles_num}')
 
-        for article_id in ids[:self.articles_num]:
+        # for article_id in ids[:self.articles_num]:
+        for article_id in ids[:10]:
             article = self.db.articles.find_one(
                 {'_id': {'$eq': article_id}}, projection=projection)
             sections = article['parsed_section']
