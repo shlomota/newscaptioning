@@ -187,6 +187,7 @@ class NewBMRelReader(DatasetReader):
                 try:
                     image = Image.open(image_path)
                 except (FileNotFoundError, OSError):
+                    print("Error: image not found")
                     continue
 
                 if 'facenet_details' not in sections[pos] or n_persons == 0:
