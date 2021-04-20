@@ -329,6 +329,7 @@ class NewBMRelReader(DatasetReader):
                     'image_path': image_path,
                     'image_pos': pos,
                     'pi_chosen': pi_chosen,
+                    'gen_type': 2,
                     'image_id': image_id}
         fields['metadata'] = MetadataField(metadata)
 
