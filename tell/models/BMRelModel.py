@@ -175,7 +175,6 @@ class BMRelModel(Model):
         self.n_batches += 1
 
         strloss = f'{self.n_batches}:{loss}'
-        print(strloss)
 
         open('/a/home/cc/students/cs/shlomotannor/nlp_course/newscaptioning/BMRel.log', 'a').write(strloss + '\n')
 
