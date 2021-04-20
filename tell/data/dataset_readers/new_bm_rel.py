@@ -225,7 +225,7 @@ class NewBMRelReader(DatasetReader):
                                              label=torch.tensor([1] * len(paragraphs)).to(device),
                                              image=iff, caption=torch.tensor([1]).to(device))
                 scores = results["score0"]
-                paragraphs_scores = torch.stack(scores).to(device="cpu").numpy()
+                paragraphs_scores = scores.to(device="cpu").numpy()
 
                 df = pd.DataFrame(columns=["paragraph", "score", "i"])
                 df.paragraph = paragraphs
