@@ -112,8 +112,8 @@ class BMRelModel(Model):
         if split == 'test' or split == 'valid':
             dbrf = split
 
-        label = label.squeeze()
-        im = self.resnet(image).detach()
+        label = label.squeeze().to(self.device)
+        im = self.resnet(image.to(self.device)).detach()
         conv = self.conv(im)
         if conv.shape[0] == 1:
             conv = conv[0].squeeze().unsqueeze(0)
