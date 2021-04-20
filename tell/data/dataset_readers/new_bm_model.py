@@ -6,6 +6,7 @@ from typing import Dict
 
 import numpy as np
 import pymongo
+import time
 import torch
 from allennlp.data.dataset_readers.dataset_reader import DatasetReader
 from allennlp.data.fields import ArrayField, MetadataField, TextField
@@ -20,7 +21,7 @@ from tqdm import tqdm
 import pandas as pd
 
 from tell.data.fields import ImageField, ListTextField
-
+from tell.commands.bm_evaluate import get_model_from_file
 from rank_bm25 import BM25Okapi
 
 logger = logging.getLogger(__name__)  # pylint: disable=invalid-name
@@ -32,6 +33,16 @@ def tokenize_line(line):
     line = SPACE_NORMALIZER.sub(" ", line)
     line = line.strip()
     return line.split()
+
+
+CONFIG_PATH = "expt/nytimes/BM/config.yaml"
+BASE_PATH = "/a/home/cc/students/cs/shlomotannor/nlp_course/newscaptioning/"
+# SERIALIZATION_DIR = os.path.join(BASE_PATH, "expt/nytimes/BM/serialization_sum_good/")
+SERIALIZATION_DIR = os.path.join(BASE_PATH, "expt/nytimes/BM/serialization_sum_good/best.th")
+
+
+def get_bmmodel():
+    return get_model_from_file(CONFIG_PATH, SERIALIZATION_DIR)
 
 
 @DatasetReader.register('new_bm_model')
@@ -85,6 +96,7 @@ class NewBMModelReader(DatasetReader):
         self.articles_num = articles_num
         self.use_first = use_first
         self.sort_BM = sort_BM
+        self.model = get_bmmodel()
 
     @overrides
     def _read(self, split: str):
@@ -94,12 +106,32 @@ class NewBMModelReader(DatasetReader):
             raise ValueError(f'Unknown split: {split}')
 
         logger.info('Grabbing all article IDs')
-        sample_cursor = self.db.articles.find({
-            'split': split,
-        }, projection=['_id']).sort('_id', pymongo.ASCENDING)
-        ids = np.array([article['_id'] for article in tqdm(sample_cursor)])
-        sample_cursor.close()
-        self.rs.shuffle(ids)
+        # sample_cursor = self.db.articles.find({
+        #     'split': split,
+        # }, projection=['_id']).sort('_id', pymongo.ASCENDING)
+        # ids = np.array([article['_id'] for article in tqdm(sample_cursor)])
+        # sample_cursor.close()
+        # load npy ids
+
+        base = "/specific/netapp5/joberant/nlp_fall_2021/shlomotannor/newscaptioning/"
+        splitn = ''
+        if split == 'test':
+            splitn = '_test'
+        elif split == 'valid':
+            splitn = '_valid'
+
+        print('split', split)
+
+        ids = np.array([])
+        while not len(ids):  # is someone else reading/writing ? Wait a bit...
+            try:
+                ids = np.load(f"{base}_ids{splitn}.npy")
+
+            except Exception as e:
+                print(e)
+                time.sleep(1)
+
+        np.random.shuffle(ids)
 
         projection = ['_id', 'parsed_section.type', 'parsed_section.text',
                       'parsed_section.hash', 'parsed_section.parts_of_speech',
@@ -213,14 +245,31 @@ class NewBMModelReader(DatasetReader):
 
                 # 'new' way of sending every paragraph
                 paragraphs = [p for p in sections if p['type'] == 'paragraph']
+                fields = []
+                for p in paragraphs:
+                    fields.append(
+                        self.article_to_bm_instance(p["text"], None, p["named_entities"], image, "FAKE CAPTION",
+                                                    image_path,
+                                                    None, None, None, None, None).fields)
+                all_probs = []
+                for p in fields:
+                    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+                    img = p["image"].image.unsqueeze(0).to(device)
+                    p["context"]["roberta"] = p["context"]["roberta"].unsqueeze(0)
+
+                    results = self.model.forward(context=p["context"], label=torch.tensor([1]).to(device),
+                                                 image=p["image"], caption=p["caption"], face_embeds=torch.tensor([[1]]),
+                                                 obj_embeds=torch.tensor([[1]]), metadata=[])
+                    all_probs.append(results["probs"])
+                paragraphs_scores = torch.stack(all_probs).to(device="cpu").numpy()
 
                 # todo: restore
-                paragraphs_texts = [p["text"] for p in paragraphs]
-                tokenized_corpus = [doc.split(" ") for doc in paragraphs_texts]
-                bm25 = BM25Okapi(tokenized_corpus)
-                query = caption
-                tokenized_query = query.split(" ")
-                paragraphs_scores = bm25.get_scores(tokenized_query)
+                # paragraphs_texts = [p["text"] for p in paragraphs]
+                # tokenized_corpus = [doc.split(" ") for doc in paragraphs_texts]
+                # bm25 = BM25Okapi(tokenized_corpus)
+                # query = caption
+                # tokenized_query = query.split(" ")
+                # paragraphs_scores = bm25.get_scores(tokenized_query)
 
                 df = pd.DataFrame(columns=["paragraph", "score", "i"])
                 df.paragraph = paragraphs
@@ -328,6 +377,56 @@ class NewBMModelReader(DatasetReader):
                     'pi_chosen': pi_chosen,
                     'gen_type': gen_type,
                     'image_id': image_id}
+        fields['metadata'] = MetadataField(metadata)
+
+        return Instance(fields)
+
+    # RON - TODO. Bad habit copied from BMReader (in the optimal case - we will call a general function, instead of copy it to here)
+    def article_to_bm_instance(self, paragraph, paragraph_score, named_entities, image, caption,
+                               image_path, web_url, pos, face_embeds, obj_feats, image_id) -> Instance:
+        # context = ' BLABLA '.join([p["text"] for p in paragraphs]).strip()
+        context = paragraph
+
+        # context_tokens = [self._tokenizer.tokenize(p["text"]) for p in paragraphs]
+        # context_tokens = [self._tokenizer.tokenize(p["text"]) for p in paragraphs]
+        context_tokens = self._tokenizer.tokenize(context)
+        caption_tokens = self._tokenizer.tokenize(caption)
+        name_token_list = [self._tokenizer.tokenize(n["text"]) for n in named_entities]
+
+        if name_token_list:
+            name_field = [TextField(tokens, self._token_indexers)
+                          for tokens in name_token_list]
+        else:
+            stub_field = ListTextField(
+                [TextField(caption_tokens, self._token_indexers)])
+            name_field = stub_field.empty_field()
+
+        context = TextField(context_tokens, self._token_indexers)
+        context.index(self.model.vocab)
+        context = context.as_tensor(context.get_padding_lengths())
+        fields = {
+            'context': context,
+            # 'context': ListTextField([TextField(p, self._token_indexers) for p in context_tokens]),
+            # 'context': ListTextField(context_tokens),
+            'names': ListTextField(name_field),
+            'image': ImageField(image, self.preprocess),
+            'caption': TextField(caption_tokens, self._token_indexers),
+            'face_embeds': ArrayField(face_embeds, padding_value=np.nan),
+            'label': ArrayField(np.array([paragraph_score]))
+            # 'labels': ArrayField(paragraphs_score)
+        }
+
+        if obj_feats is not None:
+            fields['obj_embeds'] = ArrayField(obj_feats, padding_value=np.nan)
+
+        metadata = {'context': context,
+                    'caption': caption,
+                    'names': named_entities,
+                    'web_url': web_url,
+                    'image_path': image_path,
+                    'image_pos': pos,
+                    'image_id': image_id,
+                    'label': paragraph_score}
         fields['metadata'] = MetadataField(metadata)
 
         return Instance(fields)
