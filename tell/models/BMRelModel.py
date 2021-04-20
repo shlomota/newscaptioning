@@ -113,8 +113,6 @@ class BMRelModel(Model):
             dbrf = split
 
         label = label.squeeze()
-        if len(image.shape) == 3:
-            image = image.unsqueeze(dim=0)
         im = self.resnet(image).detach()
         conv = self.conv(im)
         if conv.shape[0] == 1:
