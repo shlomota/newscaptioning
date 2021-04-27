@@ -105,13 +105,12 @@ class BMRelReader(DatasetReader):
         while not len(ids):  # is someone else reading/writing ? Wait a bit...
             try:
                 ids = np.load(f"{base}_ids{splitn}.npy")
-                ids = ids[:1]
+                # ids = ids[:1]
 
             except Exception:
                 sleep(1)
 
         self.rs.shuffle(ids)
-        print(f"found {len(ids)} article ids")
 
         projection = ['_id', 'parsed_section.type', 'parsed_section.text',
                       'parsed_section.hash', 'parsed_section.parts_of_speech',
@@ -122,7 +121,6 @@ class BMRelReader(DatasetReader):
         if self.articles_num == -1:
             self.articles_num = len(ids)
 
-        print(f'articles num: {self.articles_num}')
 
         for article_id in ids[:self.articles_num]:
             article = self.db.articles.find_one(
@@ -159,9 +157,11 @@ class BMRelReader(DatasetReader):
                 tokenized_query = query.split(" ")
                 paragraphs_scores = bm25.get_scores(tokenized_query)
 
-                # TODO: select random two paragraphs
+                # TODO: restore
                 i1, i2 = np.random.choice(range(len(paragraphs_scores)), size=2, replace=False)
+                # i1, i2 = 1,2
                 current_paragraphs = [paragraphs[i1], paragraphs[i2]]
+                # relative_score = paragraphs_scores[i2] / (paragraphs_scores[i1] + paragraphs_scores[i2])
                 relative_score = 1 * (paragraphs_scores[i2] > paragraphs_scores[i1])
 
                 image_id = f'{article_id}_{pos}'

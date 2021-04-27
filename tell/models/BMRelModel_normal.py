@@ -71,12 +71,10 @@ class BMRelModel(Model):
         self.sampling_temp = sampling_temp
         self.weigh_bert = weigh_bert
 
-        self.lstm = nn.LSTM(hidden_size=1024, input_size=1024, num_layers=2, batch_first=True)
         self.loss_func = nn.MSELoss()
 
-        size = 100
-        self.conv = nn.Conv2d(2048, size, 7)
-        self.linear = nn.Linear(1024, size)
+        self.conv = nn.Conv2d(2048, 512, 7)
+        self.linear = nn.Linear(1024, 512)
         self.relu = nn.ReLU()
         if weigh_bert:
             self.bert_weight = nn.Parameter(torch.Tensor(25))
@@ -122,8 +120,8 @@ class BMRelModel(Model):
         else:
             conv = conv.squeeze()
 
-        im_vec = conv
-        # im_vec = F.relu(conv)  # [ 512 ]
+        # im_vec = conv
+        im_vec = F.relu(conv)  # [ 512 ]
 
         # c = context['roberta']  # [B, K, N]
         # mask = context["roberta_copy_masks"]  # [B, K, N]
@@ -135,13 +133,6 @@ class BMRelModel(Model):
         masks = [torch.add(i.unsqueeze(-1).expand(*i.shape, 1024), 1) for i in masks]
         # m = [i.bool() for i in m]
 
-        # l_hiddens = torch.stack(hiddens)[:1,:,:,:].squeeze().to(self.device)
-        # output, (h_n,c_n) = self.lstm(l_hiddens)
-        # h_n = h_n[-1].unsqueeze(0)
-        # h_n = h_n.expand(len(hiddens), -1, -1)
-        # h = torch.stack([h_n[i, [index1[i], index2[i]], :] for i in range(len(index1))]).to(self.device)
-
-        # TODO: restore, use average
         hiddens = [torch.sum(cv * masks[ci], dim=1) / torch.sum(masks[ci], dim=1) for ci, cv in enumerate(hiddens)]
         hiddens = torch.nn.utils.rnn.pad_sequence(hiddens, batch_first=True).to(self.device)  # [B, N, 1024]
         h = torch.stack([hiddens[i, [index1[i], index2[i]], :] for i in range(len(index1))]).to(self.device)
@@ -162,16 +153,11 @@ class BMRelModel(Model):
         h[torch.isnan(h)] = 0
         h[torch.isinf(h)] = 1e15
 
-        text_vec = self.linear(h)  # [B, K, 512]
-        # text_vec = F.relu(self.linear(h))  # [B, K, 512]
-        # score = torch.bmm(text_vec, im_vec.unsqueeze(-1)).squeeze(-1)  # [B, K, 512] bmm [B, 512, 1] . s = [B,K]
-        score = nn.CosineSimilarity(dim=-1)(text_vec, im_vec.unsqueeze(1))
+        # text_vec = self.linear(h)  # [B, K, 512]
+        text_vec = F.relu(self.linear(h))  # [B, K, 512]
+        score = torch.bmm(text_vec, im_vec.unsqueeze(-1)).squeeze(-1)  # [B, K, 512] bmm [B, 512, 1] . s = [B,K]
         single_value_score = torch.softmax(score, dim=1)[:, 1]
-        # single_value_score = torch.ones(size=single_value_score.shape).float().to(self.device)/2
-        # single_value_score = torch.autograd.Variable(single_value_score, requires_grad=True)
-        # single_value_score = torch.rand(size=single_value_score.shape).to(self.device)
-        preds = torch.argmax(score, dim=1)
-        acc = sum(preds == label).float() / len(preds)
+
         loss = self.criterion(single_value_score, label.float())
 
         output_dict = {
@@ -184,9 +170,6 @@ class BMRelModel(Model):
         self.n_batches += 1
 
         strloss = f'{self.n_batches}:{loss}'
-        # print("\nacc: ", acc)
-        # print("sum conv weights: ", torch.sum(self.conv.weight.data).item())
-        # print("sum linear weights: ", torch.sum(self.linear.weight.data).item())
 
         open('/a/home/cc/students/cs/shlomotannor/nlp_course/newscaptioning/BMRel.log', 'a').write(strloss + '\n')
 
