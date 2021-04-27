@@ -42,7 +42,7 @@ def tokenize_line(line):
 CONFIG_PATH = "expt/nytimes/BMRel/config.yaml"
 BASE_PATH = "/a/home/cc/students/cs/shlomotannor/nlp_course/newscaptioning/"
 # SERIALIZATION_DIR = os.path.join(BASE_PATH, "expt/nytimes/BM/serialization_sum_good/")
-SERIALIZATION_DIR = os.path.join(BASE_PATH, "expt/nytimes/BMRel/serialization_mean_100_2048_cos")
+MODEL_PATH = os.path.join(BASE_PATH, "expt/nytimes/BMRel/serialization_mean_100_2048_cos/best.th")
 
 
 # FULL PATH -  /a/home/cc/students/cs/shlomotannor/nlp_course/newscaptioning/expt/nytimes/BM/serialization_1/
@@ -55,7 +55,7 @@ def get_bmmodel():
     overrides = """{"vocabulary":
                      {"type": "roberta",
                       "directory_path": "./expt/vocabulary"}"""
-    return get_model_from_file(CONFIG_PATH, SERIALIZATION_DIR)
+    return get_model_from_file(CONFIG_PATH, MODEL_PATH)
 
 
 @DatasetReader.register('new_bm_rel')
